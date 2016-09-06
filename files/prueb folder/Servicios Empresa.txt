@@ -1,0 +1,31 @@
+Es una empresa que ofrece servicos y soluciones integrales tecnológicas con un alto 
+valor agregado, adaptados especificamente a las necesidades, tamaños y ambientes de 
+nuestros clientes, mediante una asesoría oportuna y posterior soporte técnico, 
+para ayudarles a optimizar las inversiones en nuevas tecnologías y conseguir las
+máximas utilidades de estas.
+
+Buscando optimizar:
+	* Procesos internos y/o externos
+	* La calidad y el acceso de su información.
+	* Comunicación fluida.
+	* Reducción en gastos de gestión.
+
+Soluciones de Gestión Empresarial:
+
+	* Administracion de infraestructura tecnológica
+		* Consultoría tecnológica, diseño de redes einfraestrutura.
+		* Instalación y configuración de software y periféricos.
+		* Mantenimiento y optimización de redes.
+		* Configuración y administración de servidores.
+
+	* Soporte técnico
+		* Mantenimiento de Softare y Hardware
+
+	* Desarrollo de aplicaciones a medida
+		* Desarrollo y Programación de Software y sitios WEB.
+		* Administración de dominios.
+		* Administración de bases de datos.
+
+	* Servicios de consultoria sobre procesos administrativos
+		* Gestión de procesos de Negocio (BPM)
+		* Inteligencia de Negocios (BI)
