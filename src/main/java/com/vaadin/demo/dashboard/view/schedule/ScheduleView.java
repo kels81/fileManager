@@ -65,8 +65,9 @@ public final class ScheduleView extends CssLayout implements View {
         button.addClickListener(new ClickListener() {
             @Override
             public void buttonClick(ClickEvent event) {
-                tabs.removeAllComponents();
-                tabs.addComponent(displayDirectoryContents(path));
+                //tabs.removeAllComponents();
+                //tabs.addComponent(displayDirectoryContents(path));
+                cleanAndBuild(path);
             }
         });
 
@@ -190,8 +191,9 @@ public final class ScheduleView extends CssLayout implements View {
 
     private void displaySubDirectoryContents(File file) {
 
-        tabs.removeAllComponents();
-        tabs.addComponent(displayDirectoryContents(file.getAbsolutePath()));
+        //tabs.removeAllComponents();
+        //tabs.addComponent(displayDirectoryContents(file.getAbsolutePath()));
+        cleanAndBuild(file.getAbsolutePath());
 
         String root = "files";
         String directory = nameDir(file, path);
@@ -203,7 +205,6 @@ public final class ScheduleView extends CssLayout implements View {
 //            Button btnDir = (Button) comp;
 //            System.out.println("btnDir = " + btnDir.getCaption());
 //        }
-
         for (String lblDirectory : arrayDirectories) {
             btnFolder = createButton(lblDirectory);
             btnFolder.setIcon(FontAwesome.ANGLE_RIGHT);
@@ -214,8 +215,9 @@ public final class ScheduleView extends CssLayout implements View {
                 int inicio = directorys.indexOf(newRoot);
                 String dir = directorys.substring(0, inicio + newRoot.length());
 
-                tabs.removeAllComponents();
-                tabs.addComponent(displayDirectoryContents(dir));
+                //tabs.removeAllComponents();
+                //tabs.addComponent(displayDirectoryContents(dir));
+                cleanAndBuild(dir);
 
                 File newPath = new File(dir);
                 displaySubDirectoryContents(newPath);
@@ -253,6 +255,11 @@ public final class ScheduleView extends CssLayout implements View {
         String substring = directory.substring(inicio + root.length() + 1);
 
         return substring;
+    }
+
+    private void cleanAndBuild(String directory) {
+        tabs.removeAllComponents();
+        tabs.addComponent(displayDirectoryContents(directory));
     }
 
 }
