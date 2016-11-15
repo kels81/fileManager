@@ -1,16 +1,21 @@
 package com.vaadin.demo.dashboard.view.schedule;
 
-import java.util.List;
-
-import com.vaadin.demo.dashboard.event.DashboardEventBus;
+import com.vaadin.demo.dashboard.utils.Components;
+import com.vaadin.demo.dashboard.utils.Notifications;
+import com.vaadin.event.FieldEvents;
 import com.vaadin.event.LayoutEvents.LayoutClickEvent;
 import com.vaadin.navigator.View;
 import com.vaadin.navigator.ViewChangeListener.ViewChangeEvent;
 import com.vaadin.server.FileResource;
 import com.vaadin.server.FontAwesome;
 import com.vaadin.server.Page;
+import com.vaadin.server.Responsive;
+import com.vaadin.server.Sizeable;
 import com.vaadin.server.ThemeResource;
 import com.vaadin.shared.MouseEventDetails.MouseButton;
+import com.vaadin.shared.ui.MarginInfo;
+import com.vaadin.shared.ui.label.ContentMode;
+import com.vaadin.ui.AbstractTextField;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
@@ -20,53 +25,91 @@ import com.vaadin.ui.CssLayout;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Image;
 import com.vaadin.ui.Label;
+import com.vaadin.ui.MenuBar;
+import com.vaadin.ui.MenuBar.MenuItem;
 import com.vaadin.ui.TabSheet;
+import com.vaadin.ui.TextField;
+import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
+import com.vaadin.ui.Window;
 import com.vaadin.ui.themes.ValoTheme;
 import java.io.File;
-import org.apache.commons.collections.IteratorUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.lang3.StringUtils;
 
 @SuppressWarnings("serial")
 public final class ScheduleView extends CssLayout implements View {
 
     private ThemeResource iconResource;
-    private String path;
-    private TabSheet tabs;
+    private final String path;
+    private final VerticalLayout tabs;
     private HorizontalLayout rootPath;
     private Button btnFolder;
     private Label lblArrow;
+    private final Components component = new Components();
+    private Component directoryContent;
+    private HorizontalLayout toolBar;
+    private Window window;
+    private Button create;
 
     public ScheduleView() {
-        this.path = "D:/vaadin/fileManager/files/";
+        this.path = "C:\\Users\\Edrd\\Documents\\GitHub\\fileManager\\Archivos";
         //this.path = VaadinService.getCurrent().getBaseDirectory() + "/VAADIN/themes/UPLOADS/";
         setSizeFull();
         addStyleName("schedule");
-        DashboardEventBus.register(this);
 
-        tabs = new TabSheet();
+        tabs = new VerticalLayout();
         tabs.setSizeFull();
         tabs.addStyleName(ValoTheme.TABSHEET_PADDED_TABBAR);
 
-        //tabs.addComponent(buildCalendarView());
-        //tabs.addComponent(buildPath());
-        tabs.addComponent(displayDirectoryContents(path));
+        tabs.addComponent(buildToolBar());
+        tabs.addComponent(buildPath());
+        directoryContent = displayDirectoryContents(path);
+        tabs.addComponent(directoryContent);
+        tabs.setExpandRatio(directoryContent, 1);
 
         addComponent(tabs);
     }
 
+    private Component buildToolBar() {
+        toolBar = new HorizontalLayout();
+        //toolBar.setWidth(100.0f, Sizeable.Unit.PERCENTAGE);
+        toolBar.setSpacing(true);
+        toolBar.setMargin(new MarginInfo(true, false, false, true));
+
+        MenuBar menubar = component.createMenuBar();
+        MenuItem menu = menubar.addItem("Nuevo", null);
+        menu.setIcon(FontAwesome.PLUS);
+        menu.addItem("Carpeta", (MenuItem selectedItem) -> {
+            Window w = createWindow();
+            UI.getCurrent().addWindow(w);
+            w.focus();
+        });
+
+        Button upload = component.createButton("Subir");
+        upload.setIcon(FontAwesome.UPLOAD);
+        upload.addClickListener((ClickEvent event) -> {
+            Window w = createWindow();
+            UI.getCurrent().addWindow(w);
+            w.focus();
+        });
+
+        toolBar.addComponent(menubar);
+        toolBar.addComponent(upload);
+
+        return toolBar;
+    }
+
     private Component buildPath() {
         rootPath = new HorizontalLayout();
-        //rootPath.setSizeFull();
-        rootPath.setWidth(100.0f, Unit.PERCENTAGE);
+        rootPath.setMargin(new MarginInfo(true, false, false, true));
+        //rootPath.setWidth(100.0f, Unit.PERCENTAGE);
 
-        Button button = createButton("Archivos");
+        Button button = component.createButton("Archivos");
         button.addClickListener(new ClickListener() {
             @Override
             public void buttonClick(ClickEvent event) {
-                //tabs.removeAllComponents();
-                //tabs.addComponent(displayDirectoryContents(path));
                 cleanAndBuild(path);
             }
         });
@@ -79,11 +122,9 @@ public final class ScheduleView extends CssLayout implements View {
     private Component displayDirectoryContents(String path) {
 
         CssLayout catalog = new CssLayout();
-        catalog.setCaption("Catalog");
         catalog.addStyleName("catalog");
 
-        catalog.addComponent(buildPath());
-
+        //catalog.addComponent(buildPath());
         File currentDir = new File(path);
         File[] files = currentDir.listFiles();
 
@@ -190,33 +231,21 @@ public final class ScheduleView extends CssLayout implements View {
     }
 
     private void displaySubDirectoryContents(File file) {
-
-        //tabs.removeAllComponents();
-        //tabs.addComponent(displayDirectoryContents(file.getAbsolutePath()));
         cleanAndBuild(file.getAbsolutePath());
 
-        String root = "files";
+        String root = "Archivos";
         String directory = nameDir(file, path);
         String[] arrayDirectories = directory.split("\\\\");
 
-//        List<Component> components = IteratorUtils.toList(rootPath.iterator());
-//        
-//        for (Component comp : components) {
-//            Button btnDir = (Button) comp;
-//            System.out.println("btnDir = " + btnDir.getCaption());
-//        }
         for (String lblDirectory : arrayDirectories) {
-            btnFolder = createButton(lblDirectory);
-            btnFolder.setIcon(FontAwesome.ANGLE_RIGHT);
+            lblArrow = new Label(FontAwesome.ANGLE_RIGHT.getHtml(), ContentMode.HTML);
+            lblArrow.addStyleName(ValoTheme.LABEL_COLORED);
+            btnFolder = component.createButton(lblDirectory);
             btnFolder.addClickListener(e -> {
-
                 String newRoot = e.getComponent().getCaption();
                 String directorys = file.getAbsolutePath();
                 int inicio = directorys.indexOf(newRoot);
                 String dir = directorys.substring(0, inicio + newRoot.length());
-
-                //tabs.removeAllComponents();
-                //tabs.addComponent(displayDirectoryContents(dir));
                 cleanAndBuild(dir);
 
                 File newPath = new File(dir);
@@ -224,10 +253,10 @@ public final class ScheduleView extends CssLayout implements View {
 
             });
 
+            rootPath.addComponent(lblArrow);
+            rootPath.setComponentAlignment(lblArrow, Alignment.MIDDLE_CENTER);
             rootPath.addComponent(btnFolder);
         }
-
-        rootPath.setExpandRatio(btnFolder, 1.0f);
     }
 
     private void downloadContents(File file) {
@@ -238,14 +267,6 @@ public final class ScheduleView extends CssLayout implements View {
                             fileDownloader.extend(frame);
          */
         Page.getCurrent().open(resPath, null, false);
-    }
-
-    public Button createButton(String caption) {
-        Button btn = new Button(caption);
-        btn.addStyleName(ValoTheme.BUTTON_SMALL);
-        btn.addStyleName(ValoTheme.BUTTON_BORDERLESS_COLORED);
-        //btnFolder.setEnabled(false);
-        return btn;
     }
 
     private String nameDir(File file, String nameDir) {
@@ -259,7 +280,83 @@ public final class ScheduleView extends CssLayout implements View {
 
     private void cleanAndBuild(String directory) {
         tabs.removeAllComponents();
-        tabs.addComponent(displayDirectoryContents(directory));
+        tabs.addComponent(buildToolBar());
+        tabs.addComponent(buildPath());
+        directoryContent = displayDirectoryContents(directory);
+        tabs.addComponent(directoryContent);
+        tabs.setExpandRatio(directoryContent, 1);
+    }
+
+    private Window createWindow() {
+        window = new Window();
+        window.addStyleName("createfolder-window");
+        Responsive.makeResponsive(this);
+
+        window.setModal(true);
+        window.setResizable(false);
+        window.setClosable(true);
+        window.setHeight(90.0f, Sizeable.Unit.PERCENTAGE);
+
+        VerticalLayout content = new VerticalLayout();
+        content.setSizeFull();
+        window.setContent(content);
+
+        TabSheet detailsWrapper = new TabSheet();
+        detailsWrapper.setSizeFull();
+        detailsWrapper.addStyleName(ValoTheme.TABSHEET_PADDED_TABBAR);
+        content.addComponent(detailsWrapper);
+        content.setExpandRatio(detailsWrapper, 1f);
+
+        /*[ NAMEFOLDER ]*/
+        VerticalLayout body = new VerticalLayout();
+        body.setCaption("Carpeta");
+        body.setSizeFull();
+        body.setSpacing(true);
+        body.setMargin(true);
+
+        TextField txtNameFolder = new TextField();
+        txtNameFolder.setWidth(100.0f, Sizeable.Unit.PERCENTAGE);
+        txtNameFolder.setInputPrompt("Escriba el nombre de carpeta");
+        txtNameFolder.setTextChangeEventMode(AbstractTextField.TextChangeEventMode.EAGER);          //EAGER, Para que evento no sea lento
+        txtNameFolder.setTextChangeTimeout(200);                                  //Duración para iniciar el evento
+        txtNameFolder.setImmediate(true);
+        txtNameFolder.addTextChangeListener((FieldEvents.TextChangeEvent event) -> {
+            create.setEnabled(StringUtils.isNotBlank(event.getText()));
+        });
+
+        body.addComponent(txtNameFolder);
+        body.setComponentAlignment(txtNameFolder, Alignment.MIDDLE_CENTER);
+        /*[ /NAMEFOLDER ]*/
+
+ /*[ FOOTER ]*/
+        HorizontalLayout footer = new HorizontalLayout();
+        footer.addStyleName(ValoTheme.WINDOW_BOTTOM_TOOLBAR);
+        footer.setWidth(100.0f, Sizeable.Unit.PERCENTAGE);
+
+        create = new Button("Crear");
+        create.addStyleName(ValoTheme.BUTTON_PRIMARY);
+        create.setEnabled(false);
+        create.addClickListener(new ClickListener() {
+            @Override
+            public void buttonClick(ClickEvent event) {
+                File directory = new File(path + "/" + txtNameFolder.getValue());
+                System.out.println("directory = " + directory);
+                directory.mkdir();
+
+                //notification.createSuccess();
+                Notifications notification = new Notifications();
+                notification.createFailure("Problemas con la creación");
+                window.close();
+            }
+        });
+        footer.addComponent(create);
+        footer.setComponentAlignment(create, Alignment.TOP_RIGHT);
+        /*[ /FOOTER ]*/
+
+        detailsWrapper.addComponent(body);
+        content.addComponent(footer);
+
+        return window;
     }
 
 }
