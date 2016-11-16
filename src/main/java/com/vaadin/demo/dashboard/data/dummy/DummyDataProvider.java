@@ -40,8 +40,8 @@ import com.vaadin.demo.dashboard.domain.DashboardNotification;
 import com.vaadin.demo.dashboard.domain.Movie;
 import com.vaadin.demo.dashboard.domain.MovieRevenue;
 import com.vaadin.demo.dashboard.domain.Transaction;
-import com.vaadin.demo.dashboard.domain.User;
 import com.vaadin.demo.dashboard.domain.Usuarios;
+import com.vaadin.demo.dashboard.utils.Notifications;
 import com.vaadin.server.VaadinRequest;
 import com.vaadin.util.CurrentInstance;
 import javax.persistence.EntityManager;
@@ -413,7 +413,14 @@ public class DummyDataProvider implements DataProvider {
         listUsuarios = consultas.getUsuario(userName, password);
         System.out.println("listUsuarios = " + listUsuarios);
         
-        Usuarios usuario = em.getReference(Usuarios.class, listUsuarios.get(0));
+        Usuarios usuario = new Usuarios();
+        
+        if (listUsuarios.isEmpty()) {
+            Notifications notification = new Notifications();
+            notification.createFailure("Favor de revisar los datos");
+        }else{
+            usuario = em.getReference(Usuarios.class, listUsuarios.get(0));
+        }
         
         //Usuarios usuario = new Usuarios();
 
