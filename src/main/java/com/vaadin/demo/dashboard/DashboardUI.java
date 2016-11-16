@@ -29,7 +29,7 @@ import com.vaadin.ui.themes.ValoTheme;
 
 @Theme("dashboard")
 @Widgetset("com.vaadin.demo.dashboard.DashboardWidgetSet")
-@Title("QuickTickets Dashboard")
+@Title("File Manager")
 @SuppressWarnings("serial")
 public final class DashboardUI extends UI {
 
