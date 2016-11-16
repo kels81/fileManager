@@ -81,11 +81,16 @@ public final class ScheduleView extends CssLayout implements View {
         MenuBar menubar = component.createMenuBar();
         MenuItem menu = menubar.addItem("Nuevo", null);
         menu.setIcon(FontAwesome.PLUS);
-        menu.addItem("Carpeta", (MenuItem selectedItem) -> {
+        menu.addItem("Carpeta", FontAwesome.FOLDER_O, (MenuItem selectedItem) -> {
             Window w = createWindow();
             UI.getCurrent().addWindow(w);
             w.focus();
         });
+        menubar.addItem("Subir", (MenuItem selectedItem) -> {
+            Window w = createWindow();
+            UI.getCurrent().addWindow(w);
+            w.focus();
+        }).setIcon(FontAwesome.UPLOAD);
 
         Button upload = component.createButton("Subir");
         upload.setIcon(FontAwesome.UPLOAD);
@@ -94,9 +99,57 @@ public final class ScheduleView extends CssLayout implements View {
             UI.getCurrent().addWindow(w);
             w.focus();
         });
+/*
+        Plupload uploader = new Plupload("Browse", FontAwesome.FILES_O);
+        Label info = new Label();
+
+        uploader.setMaxFileSize("5mb");
+
+//show notification after file is uploaded
+        uploader.addFileUploadedListener(new Plupload.FileUploadedListener() {
+            @Override
+            public void onFileUploaded(PluploadFile file) {
+                Notification.show("I've just uploaded file: " + file.getName());
+            }
+        });
+
+//update upload progress
+        uploader.addUploadProgressListener(new Plupload.UploadProgressListener() {
+            @Override
+            public void onUploadProgress(PluploadFile file) {
+                info.setValue("I'm uploading " + file.getName()
+                        + "and I'm at " + file.getPercent() + "%");
+            }
+        });
+
+//autostart the uploader after addind files
+        uploader.addFilesAddedListener(new Plupload.FilesAddedListener() {
+            @Override
+            public void onFilesAdded(PluploadFile[] files) {
+                uploader.start();
+            }
+        });
+
+//notify, when the upload process is completed
+        uploader.addUploadCompleteListener(new Plupload.UploadCompleteListener() {
+            @Override
+            public void onUploadComplete() {
+                info.setValue("upload is completed!");
+            }
+        });
+
+//handle errors
+        uploader.addErrorListener(new Plupload.ErrorListener() {
+            @Override
+            public void onError(PluploadError error) {
+                Notification.show("There was an error: "
+                        + error.getMessage(), Notification.Type.ERROR_MESSAGE);
+            }
+        });*/
 
         toolBar.addComponent(menubar);
         toolBar.addComponent(upload);
+        //toolBar.addComponent(uploader);
 
         return toolBar;
     }
@@ -133,29 +186,30 @@ public final class ScheduleView extends CssLayout implements View {
             frame.addStyleName("frame");
             frame.setMargin(true);
             frame.addStyleName(ValoTheme.LAYOUT_CARD);
-            frame.setWidth(270.0f, Unit.PIXELS);
+            frame.setWidth(200.0f, Unit.PIXELS);
 
             HorizontalLayout fileLayout = new HorizontalLayout();
-            fileLayout.setSpacing(true);
+            //fileLayout.setSpacing(true);
             fileLayout.setDescription(file.getName());
             frame.addComponent(fileLayout);
 
             Image fileType = new Image(null, iconExtension(file));
-            fileType.setWidth(65.0f, Unit.PIXELS);
-            fileType.setHeight(57.0f, Unit.PIXELS);
+            fileType.setWidth(55.0f, Unit.PIXELS);
+            fileType.setHeight(50.0f, Unit.PIXELS);
             fileLayout.addComponent(fileType);
 
             VerticalLayout nameDetailsFile = new VerticalLayout();
             fileLayout.addComponent(nameDetailsFile);
-            fileLayout.setComponentAlignment(nameDetailsFile, Alignment.BOTTOM_RIGHT);
+            fileLayout.setComponentAlignment(nameDetailsFile, Alignment.BOTTOM_LEFT);
 
             String name = file.getName();
             name = (name.length() > 17 ? name.substring(0, 14) + "..." : name);
             Label nameFile = new Label(name);
             nameFile.addStyleName(ValoTheme.LABEL_SMALL);
             nameFile.addStyleName(ValoTheme.LABEL_BOLD);
-            nameFile.setWidth(120.0f, Unit.PIXELS);
+            nameFile.setWidth(100.0f, Unit.PIXELS);
             nameDetailsFile.addComponent(nameFile);
+            nameDetailsFile.setComponentAlignment(nameFile, Alignment.BOTTOM_LEFT);
 
             long fileSize = file.length();
             String fileSizeDisplay = FileUtils.byteCountToDisplaySize(fileSize);
@@ -169,6 +223,7 @@ public final class ScheduleView extends CssLayout implements View {
             Label detailsFile = new Label(label);
             detailsFile.addStyleName(ValoTheme.LABEL_TINY);
             nameDetailsFile.addComponent(detailsFile);
+            nameDetailsFile.setComponentAlignment(detailsFile, Alignment.BOTTOM_LEFT);
 
             frame.addLayoutClickListener((LayoutClickEvent event) -> {
                 if (event.getButton() == MouseButton.LEFT) {
