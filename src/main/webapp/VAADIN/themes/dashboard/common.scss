@@ -314,111 +314,11 @@
             border-radius: 0;
         }
     }
-
-    /** INICIO ESTILOS MESSAGEBOX **/
-    .v-window-outerheader {
-        background-color: #5fa2dd;
-        //background-image: linear-gradient(to bottom, #1b87e3 2%, #166ed5 98%);
-        //background-color: #1f7ddd;
-        padding: 12px 14px;
+    
+    .createfolder-window {
+        max-height: round(10 * $v-font-size);
+        width: round(17 * $v-font-size);
+        max-width: 90%;
     }
-
-    .v-window-header {
-        color: #f0f0f0;
-        font-family: "Open Sans","Helvetica Neue",helvetica,arial,verdana,sans-serif;
-        font-size: 16px;
-        font-weight: 400;
-        line-height: 20px;        
-    }
-
-    .v-window {
-        padding: 4px 4px;
-        border-radius: 4px;
-        background-color: white;
-        font-family: "Open Sans",sans-serif;
-        font-size: 16px;
-        font-weight: 400;
-        color: #474747;
-        -webkit-box-shadow: 0 4px 10px 0 rgba(0, 0, 0, 0.1), 0 3px 5px 0 rgba(0, 0, 0, 0.05), 0 0 0 1px rgba(0, 0, 0, 0.09098);
-        box-shadow: 0 4px 10px 0 rgba(0, 0, 0, 0.1), 0 3px 5px 0 rgba(0, 0, 0, 0.05), 0 0 0 1px rgba(0, 0, 0, 0.09098);
-        -webkit-backface-visibility: hidden;
-        -moz-backface-visibility: hidden;
-        -ms-backface-visibility: hidden;
-        backface-visibility: hidden;
-        -webkit-box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1), 0 16px 80px -6px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(0, 0, 0, 0.09098);
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1), 0 16px 80px -6px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(0, 0, 0, 0.09098);
-        padding: 0;
-        min-width: 148px !important;
-        min-height: 37px !important;
-        white-space: nowrap;
-        overflow: hidden !important;
-        -webkit-transition: width 200ms, height 200ms, top 200ms, left 200ms;
-        -moz-transition: width 200ms, height 200ms, top 200ms, left 200ms;
-        transition: width 200ms, height 200ms, top 200ms, left 200ms;
-    }
-
-    .v-label-questionIcon, .v-label-infoIcon {
-        color: #0080b0;
-    }
-
-    .v-label-warningIcon {
-        color: #f8d400
-    }
-
-    .v-label-errorIcon {
-        color: #e53935;
-    }
-
-    .v-button-mystyle {
-        -moz-border-bottom-colors: none;
-        -moz-border-left-colors: none;
-        -moz-border-right-colors: none;
-        -moz-border-top-colors: none;
-        background-color: #5fa2dd;
-        background-image: none;
-        border-color: #5fa2dd;
-        border-image: none;
-        border-style: solid;
-        border-width: 2px;
-        box-shadow: 0 1px 0 white inset, 0 -1px 0 #e7e7e7 inset, 0 2px 3px rgba(0, 0, 0, 0.05);
-        color: #f0f0f0;
-        cursor: pointer;
-        font-weight: 400;
-        height: 37px;
-        outline: medium none;
-        padding: 0 16px;
-        position: relative;
-        text-align: center;
-        text-shadow: 0 1px 0 rgba(255, 255, 255, 0.05);
-        white-space: nowrap;
-        &:after {
-            border: inherit;
-            top: -1px;
-            right: -1px;
-            bottom: -1px;
-            left: -1px;
-        }
-        &:hover:after {
-            background-color: rgba(48, 87, 193, 0.1);
-        }
-        &:focus:after {
-            border: inherit;
-            -webkit-box-shadow: 0 0 0 2px rgba(25, 125, 225, 0.5);
-            box-shadow: 0 0 0 2px rgba(25, 125, 225, 0.5);
-        }
-        &:active:after {
-            background-color: rgba(2, 62, 122, 0.2);
-        }
-    }
-
-    .v-ie8 .v-button-mystyle {
-        min-width: 43px;
-    }
-
-/*    .v-button-messageBoxIcon {
-        color: #0080B0;
-    }*/
-    /** FIN ESTILOS MESSAGEBOX **/
-
-
+    
 }

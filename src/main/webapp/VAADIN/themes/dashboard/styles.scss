@@ -7,3 +7,6 @@
   @include addons;
   @include dashboard;
 }
+
+
+@include v-font(MyIcons, '../../../../dashboard/fonts_myIcons/Flaticon');

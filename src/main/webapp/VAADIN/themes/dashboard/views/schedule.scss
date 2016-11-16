@@ -54,12 +54,12 @@
 
       .frame {
         cursor: pointer;
+        padding: $view-padding/2;
 
         &:hover {
           border-color: $v-focus-color;
           background-color: #f5f5f5;
         }
-
         
       }
 
