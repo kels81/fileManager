@@ -34,7 +34,7 @@ public class Components {
      public Button createButton(String caption) {
         Button btn = new Button(caption);
         btn.addStyleName(ValoTheme.BUTTON_SMALL);
-        btn.addStyleName(ValoTheme.BUTTON_BORDERLESS_COLORED);
+        btn.addStyleName(ValoTheme.BUTTON_PRIMARY);
         //btnFolder.setEnabled(false);
         return btn;
     }
@@ -42,7 +42,7 @@ public class Components {
      public MenuBar createMenuBar() {
         MenuBar menu = new MenuBar();
         menu.addStyleName(ValoTheme.MENUBAR_SMALL);
-        menu.addStyleName(ValoTheme.MENUBAR_BORDERLESS);
+        menu.addStyleName("primary");
         return menu;
     }
 }

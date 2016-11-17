@@ -27,6 +27,7 @@ import com.vaadin.ui.Image;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.MenuBar;
 import com.vaadin.ui.MenuBar.MenuItem;
+import com.vaadin.ui.Notification;
 import com.vaadin.ui.TabSheet;
 import com.vaadin.ui.TextField;
 import com.vaadin.ui.UI;
@@ -37,6 +38,9 @@ import java.io.File;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
+import pl.exsio.plupload.Plupload;
+import pl.exsio.plupload.PluploadError;
+import pl.exsio.plupload.PluploadFile;
 
 @SuppressWarnings("serial")
 public final class ScheduleView extends CssLayout implements View {
@@ -76,7 +80,8 @@ public final class ScheduleView extends CssLayout implements View {
         toolBar = new HorizontalLayout();
         //toolBar.setWidth(100.0f, Sizeable.Unit.PERCENTAGE);
         toolBar.setSpacing(true);
-        toolBar.setMargin(new MarginInfo(true, false, false, true));
+        //toolBar.setMargin(new MarginInfo(true, false, false, true));
+        toolBar.addStyleName("toolbarFile");
 
         MenuBar menubar = component.createMenuBar();
         MenuItem menu = menubar.addItem("Nuevo", null);
@@ -86,21 +91,10 @@ public final class ScheduleView extends CssLayout implements View {
             UI.getCurrent().addWindow(w);
             w.focus();
         });
-        menubar.addItem("Subir", (MenuItem selectedItem) -> {
-            Window w = createWindow();
-            UI.getCurrent().addWindow(w);
-            w.focus();
-        }).setIcon(FontAwesome.UPLOAD);
 
-        Button upload = component.createButton("Subir");
-        upload.setIcon(FontAwesome.UPLOAD);
-        upload.addClickListener((ClickEvent event) -> {
-            Window w = createWindow();
-            UI.getCurrent().addWindow(w);
-            w.focus();
-        });
-/*
-        Plupload uploader = new Plupload("Browse", FontAwesome.FILES_O);
+        Plupload uploader = new Plupload("Subir", FontAwesome.UPLOAD);
+        uploader.addStyleName(ValoTheme.BUTTON_PRIMARY);
+        uploader.addStyleName(ValoTheme.BUTTON_SMALL);
         Label info = new Label();
 
         uploader.setMaxFileSize("5mb");
@@ -145,18 +139,27 @@ public final class ScheduleView extends CssLayout implements View {
                 Notification.show("There was an error: "
                         + error.getMessage(), Notification.Type.ERROR_MESSAGE);
             }
-        });*/
+        });
+        
+        Button email = component.createButton("Email");
+        email.setIcon(FontAwesome.ENVELOPE_O);
+        email.addClickListener((ClickEvent event) -> {
+            Window w = createWindow();
+            UI.getCurrent().addWindow(w);
+            w.focus();
+        });
 
         toolBar.addComponent(menubar);
-        toolBar.addComponent(upload);
-        //toolBar.addComponent(uploader);
+        toolBar.addComponent(uploader);
+        toolBar.addComponent(email);
 
         return toolBar;
     }
 
     private Component buildPath() {
         rootPath = new HorizontalLayout();
-        rootPath.setMargin(new MarginInfo(true, false, false, true));
+        //rootPath.setMargin(new MarginInfo(true, false, false, true));
+        rootPath.addStyleName("toolbarFile");
         //rootPath.setWidth(100.0f, Unit.PERCENTAGE);
 
         Button button = component.createButton("Archivos");
@@ -182,6 +185,10 @@ public final class ScheduleView extends CssLayout implements View {
         File[] files = currentDir.listFiles();
 
         for (final File file : files) {
+            
+            CssLayout mainPanel = new CssLayout();
+            mainPanel.addStyleName("mainPanel");
+            
             VerticalLayout frame = new VerticalLayout();
             frame.addStyleName("frame");
             frame.setMargin(true);
@@ -234,7 +241,8 @@ public final class ScheduleView extends CssLayout implements View {
                     }
                 }
             });
-            catalog.addComponent(frame);
+            mainPanel.addComponent(frame);
+            catalog.addComponent(mainPanel);
 
         }
         //File currentDir2 = new File("D:/vaadin/fileManager/files/"); // current directory

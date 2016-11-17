@@ -102,7 +102,7 @@
         max-height: round(30 * $v-font-size);
         width: round(45 * $v-font-size);
         max-width: 90%;
-        
+
         .v-window-outerheader{
             background-color: inherit;
         }
@@ -314,11 +314,32 @@
             border-radius: 0;
         }
     }
-    
+
     .createfolder-window {
         max-height: round(10 * $v-font-size);
         width: round(17 * $v-font-size);
         max-width: 90%;
     }
-    
+
+    .v-menubar-primary {
+        -moz-border-bottom-colors: none;
+        -moz-border-left-colors: none;
+        -moz-border-right-colors: none;
+        -moz-border-top-colors: none;
+        background-color: #197de1;
+        background-image: none;
+        border-color: #156ab3 #1362b1 #1156a8;
+        border-image: none;
+        border-radius: 4px;
+        border-style: solid;
+        border-width: 1px;
+        box-shadow: 0 1px 0 #4d98e6 inset, 0 -1px 0 #166bca inset, 0 2px 3px rgba(0, 0, 0, 0.05);
+        color: #ecf2f8;
+        cursor: default;
+        font-weight: 400;
+        padding: 0;
+        text-align: left;
+        text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.05);
+    }
+
 }
