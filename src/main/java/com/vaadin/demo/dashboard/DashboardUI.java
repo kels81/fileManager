@@ -1,6 +1,5 @@
 package com.vaadin.demo.dashboard;
 
-import java.util.Locale;
 
 import com.google.common.eventbus.Subscribe;
 import com.vaadin.annotations.Theme;
@@ -8,7 +7,6 @@ import com.vaadin.annotations.Title;
 import com.vaadin.annotations.Widgetset;
 import com.vaadin.demo.dashboard.data.DataProvider;
 import com.vaadin.demo.dashboard.data.dummy.DummyDataProvider;
-import com.vaadin.demo.dashboard.domain.User;
 import com.vaadin.demo.dashboard.domain.Usuarios;
 import com.vaadin.demo.dashboard.event.DashboardEvent.BrowserResizeEvent;
 import com.vaadin.demo.dashboard.event.DashboardEvent.CloseOpenWindowsEvent;

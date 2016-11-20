@@ -16,7 +16,7 @@ import com.vaadin.ui.themes.ValoTheme;
  * @author Eduardo
  */
 public class Components {
-    
+
     public CheckBox createCheckBox(String caption) {
         CheckBox cb = new CheckBox(caption);
         cb.setImmediate(true);
@@ -30,19 +30,29 @@ public class Components {
         //f.addBlurListener(blurListener);
         return f;
     }
-    
-     public Button createButton(String caption) {
+
+    public Button createButton(String caption) {
         Button btn = new Button(caption);
         btn.addStyleName(ValoTheme.BUTTON_SMALL);
         btn.addStyleName(ValoTheme.BUTTON_PRIMARY);
         //btnFolder.setEnabled(false);
         return btn;
     }
-     
-     public MenuBar createMenuBar() {
+
+    public Button createButtonPath(String caption) {
+        Button btn = new Button(caption);
+        btn.addStyleName(ValoTheme.BUTTON_SMALL);
+        btn.addStyleName(ValoTheme.BUTTON_BORDERLESS_COLORED);
+        //btnFolder.setEnabled(false);
+        return btn;
+    }
+
+    public MenuBar createMenuBar() {
         MenuBar menu = new MenuBar();
         menu.addStyleName(ValoTheme.MENUBAR_SMALL);
         menu.addStyleName("primary");
         return menu;
     }
+    
+    
 }

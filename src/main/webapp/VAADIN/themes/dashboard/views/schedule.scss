@@ -50,10 +50,17 @@
         }
         
         .toolbarFile {
-            padding-top: $view-padding/2;
-            padding-left: $view-padding/2;
-            padding-right: $view-padding/2;
+            padding: 17px;
+            width: 100%;
+            background-color: #f6f8fa ;
+            border: 1px solid #dcdcdc;
         }
+        
+        .barPath {
+            padding: $view-padding/2;
+        }
+        
+        
 
         .catalog {
             padding: $view-padding/2;
