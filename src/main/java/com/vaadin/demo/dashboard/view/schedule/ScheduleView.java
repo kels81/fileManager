@@ -1,5 +1,8 @@
 package com.vaadin.demo.dashboard.view.schedule;
 
+import com.vaadin.addon.contextmenu.MenuItem;
+import com.vaadin.addon.contextmenu.ContextMenu;
+import com.vaadin.demo.dashboard.component.EmailWindow;
 import com.vaadin.demo.dashboard.utils.Components;
 import com.vaadin.demo.dashboard.utils.Notifications;
 import com.vaadin.event.FieldEvents;
@@ -13,7 +16,6 @@ import com.vaadin.server.Responsive;
 import com.vaadin.server.Sizeable;
 import com.vaadin.server.ThemeResource;
 import com.vaadin.shared.MouseEventDetails.MouseButton;
-import com.vaadin.shared.ui.MarginInfo;
 import com.vaadin.shared.ui.label.ContentMode;
 import com.vaadin.ui.AbstractTextField;
 import com.vaadin.ui.Alignment;
@@ -26,8 +28,8 @@ import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Image;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.MenuBar;
-import com.vaadin.ui.MenuBar.MenuItem;
 import com.vaadin.ui.Notification;
+import com.vaadin.ui.ProgressBar;
 import com.vaadin.ui.TabSheet;
 import com.vaadin.ui.TextField;
 import com.vaadin.ui.UI;
@@ -35,8 +37,13 @@ import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.Window;
 import com.vaadin.ui.themes.ValoTheme;
 import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.io.filefilter.TrueFileFilter;
 import org.apache.commons.lang3.StringUtils;
 import pl.exsio.plupload.Plupload;
 import pl.exsio.plupload.PluploadError;
@@ -46,7 +53,8 @@ import pl.exsio.plupload.PluploadFile;
 public final class ScheduleView extends CssLayout implements View {
 
     private ThemeResource iconResource;
-    private final String path;
+    private File path;
+    private final File origenPath;
     private final VerticalLayout tabs;
     private HorizontalLayout rootPath;
     private Button btnFolder;
@@ -56,9 +64,11 @@ public final class ScheduleView extends CssLayout implements View {
     private HorizontalLayout toolBar;
     private Window window;
     private Button create;
+    private final ProgressBar progressBar = new ProgressBar(0.0f);
+    private final Notifications notification = new Notifications();
 
     public ScheduleView() {
-        this.path = "C:\\Users\\Edrd\\Documents\\GitHub\\fileManager\\Archivos";
+        this.origenPath = new File("C:\\Users\\Edrd\\Documents\\GitHub\\fileManager\\Archivos");
         //this.path = VaadinService.getCurrent().getBaseDirectory() + "/VAADIN/themes/UPLOADS/";
         setSizeFull();
         addStyleName("schedule");
@@ -69,11 +79,14 @@ public final class ScheduleView extends CssLayout implements View {
 
         tabs.addComponent(buildToolBar());
         tabs.addComponent(buildPath());
-        directoryContent = displayDirectoryContents(path);
+        directoryContent = displayDirectoryContents(origenPath);
         tabs.addComponent(directoryContent);
         tabs.setExpandRatio(directoryContent, 1);
 
+        progressBar.setCaption("Progress");
+
         addComponent(tabs);
+        addComponent(progressBar);
     }
 
     private Component buildToolBar() {
@@ -84,70 +97,24 @@ public final class ScheduleView extends CssLayout implements View {
         toolBar.addStyleName("toolbarFile");
 
         MenuBar menubar = component.createMenuBar();
-        MenuItem menu = menubar.addItem("Nuevo", null);
+        MenuBar.MenuItem menu = menubar.addItem("Nuevo", null);
         menu.setIcon(FontAwesome.PLUS);
-        menu.addItem("Carpeta", FontAwesome.FOLDER_O, (MenuItem selectedItem) -> {
+        menu.addItem("Carpeta", FontAwesome.FOLDER_O, (MenuBar.MenuItem selectedItem) -> {
             Window w = createWindow();
             UI.getCurrent().addWindow(w);
             w.focus();
         });
 
-        Plupload uploader = new Plupload("Subir", FontAwesome.UPLOAD);
-        uploader.addStyleName(ValoTheme.BUTTON_PRIMARY);
-        uploader.addStyleName(ValoTheme.BUTTON_SMALL);
-        Label info = new Label();
-
-        uploader.setMaxFileSize("5mb");
-
-//show notification after file is uploaded
-        uploader.addFileUploadedListener(new Plupload.FileUploadedListener() {
-            @Override
-            public void onFileUploaded(PluploadFile file) {
-                Notification.show("I've just uploaded file: " + file.getName());
-            }
-        });
-
-//update upload progress
-        uploader.addUploadProgressListener(new Plupload.UploadProgressListener() {
-            @Override
-            public void onUploadProgress(PluploadFile file) {
-                info.setValue("I'm uploading " + file.getName()
-                        + "and I'm at " + file.getPercent() + "%");
-            }
-        });
-
-//autostart the uploader after addind files
-        uploader.addFilesAddedListener(new Plupload.FilesAddedListener() {
-            @Override
-            public void onFilesAdded(PluploadFile[] files) {
-                uploader.start();
-            }
-        });
-
-//notify, when the upload process is completed
-        uploader.addUploadCompleteListener(new Plupload.UploadCompleteListener() {
-            @Override
-            public void onUploadComplete() {
-                info.setValue("upload is completed!");
-            }
-        });
-
-//handle errors
-        uploader.addErrorListener(new Plupload.ErrorListener() {
-            @Override
-            public void onError(PluploadError error) {
-                Notification.show("There was an error: "
-                        + error.getMessage(), Notification.Type.ERROR_MESSAGE);
-            }
-        });
-        
         Button email = component.createButton("Email");
         email.setIcon(FontAwesome.ENVELOPE_O);
         email.addClickListener((ClickEvent event) -> {
-            Window w = createWindow();
+            EmailWindow emailWdw = new EmailWindow();
+            Window w = emailWdw;
             UI.getCurrent().addWindow(w);
             w.focus();
         });
+
+        Plupload uploader = uploadContents();
 
         toolBar.addComponent(menubar);
         toolBar.addComponent(uploader);
@@ -159,14 +126,14 @@ public final class ScheduleView extends CssLayout implements View {
     private Component buildPath() {
         rootPath = new HorizontalLayout();
         //rootPath.setMargin(new MarginInfo(true, false, false, true));
-        rootPath.addStyleName("toolbarFile");
+        rootPath.addStyleName("barPath");
         //rootPath.setWidth(100.0f, Unit.PERCENTAGE);
 
-        Button button = component.createButton("Archivos");
+        Button button = component.createButtonPath("Archivos");
         button.addClickListener(new ClickListener() {
             @Override
             public void buttonClick(ClickEvent event) {
-                cleanAndBuild(path);
+                cleanAndBuild(origenPath);
             }
         });
 
@@ -175,79 +142,78 @@ public final class ScheduleView extends CssLayout implements View {
         return rootPath;
     }
 
-    private Component displayDirectoryContents(String path) {
+    private Component displayDirectoryContents(File pathDirectory) {
+        path = pathDirectory;
+        System.out.println("pathDirectoryContents = " + path);
 
         CssLayout catalog = new CssLayout();
         catalog.addStyleName("catalog");
 
-        //catalog.addComponent(buildPath());
-        File currentDir = new File(path);
-        File[] files = currentDir.listFiles();
+        File currentDir = new File(path.getAbsolutePath());
+        List<File> files = (List<File>)directoryContents(currentDir);
 
-        for (final File file : files) {
-            
+        //for (final File file : files) {
+        files.stream().map((file) -> {
             CssLayout mainPanel = new CssLayout();
             mainPanel.addStyleName("mainPanel");
-            
             VerticalLayout frame = new VerticalLayout();
             frame.addStyleName("frame");
             frame.setMargin(true);
             frame.addStyleName(ValoTheme.LAYOUT_CARD);
             frame.setWidth(200.0f, Unit.PIXELS);
-
             HorizontalLayout fileLayout = new HorizontalLayout();
             //fileLayout.setSpacing(true);
-            fileLayout.setDescription(file.getName());
+            //fileLayout.setDescription(file.getName());
             frame.addComponent(fileLayout);
-
             Image fileType = new Image(null, iconExtension(file));
             fileType.setWidth(55.0f, Unit.PIXELS);
             fileType.setHeight(50.0f, Unit.PIXELS);
             fileLayout.addComponent(fileType);
-
             VerticalLayout nameDetailsFile = new VerticalLayout();
             fileLayout.addComponent(nameDetailsFile);
             fileLayout.setComponentAlignment(nameDetailsFile, Alignment.BOTTOM_LEFT);
-
             String name = file.getName();
-            name = (name.length() > 17 ? name.substring(0, 14) + "..." : name);
+            name = (name.length() > 18 ? name.substring(0, 15) + "..." : name);
             Label nameFile = new Label(name);
-            nameFile.addStyleName(ValoTheme.LABEL_SMALL);
+            nameFile.addStyleName(ValoTheme.LABEL_TINY);
             nameFile.addStyleName(ValoTheme.LABEL_BOLD);
-            nameFile.setWidth(100.0f, Unit.PIXELS);
+            nameFile.setWidth(115.0f, Unit.PIXELS);
             nameDetailsFile.addComponent(nameFile);
             nameDetailsFile.setComponentAlignment(nameFile, Alignment.BOTTOM_LEFT);
-
             long fileSize = file.length();
             String fileSizeDisplay = FileUtils.byteCountToDisplaySize(fileSize);
             String label = (file.isDirectory()
                     ? String.valueOf(file.list().length == 0
                             ? "" : file.list().length) + (file.list().length > 1
-                            ? " elementos" : file.list().length == 0
-                                    ? "vacío" : " elemento")
+                    ? " elementos" : file.list().length == 0
+                    ? "vacío" : " elemento")
                     : fileSizeDisplay);
-
             Label detailsFile = new Label(label);
             detailsFile.addStyleName(ValoTheme.LABEL_TINY);
             nameDetailsFile.addComponent(detailsFile);
             nameDetailsFile.setComponentAlignment(detailsFile, Alignment.BOTTOM_LEFT);
-
             frame.addLayoutClickListener((LayoutClickEvent event) -> {
                 if (event.getButton() == MouseButton.LEFT) {
+
                     if (file.isDirectory()) {
                         displaySubDirectoryContents(file);
                     } else if (file.isFile()) {
-                        downloadContents(file);
+                        //downloadContents(file);
                     }
                 }
             });
+            ContextMenu contextMenu = new ContextMenu(this, false);
+            fillMenu(contextMenu);
+            contextMenu.setAsContextMenuOf(frame);
             mainPanel.addComponent(frame);
+            return mainPanel;
+        }).forEach((mainPanel) -> {
             catalog.addComponent(mainPanel);
-
-        }
-        //File currentDir2 = new File("D:/vaadin/fileManager/files/"); // current directory
-        //displayDirectoryContents(currentDir2);
-
+        }); 
+        
+        //File currentDir2 = new File("C:\\Users\\Edrd\\Documents\\GitHub\\fileManager\\Archivos"); // current directory
+        //directoryContents23(currentDir2);
+        
         return catalog;
     }
 
@@ -255,31 +221,60 @@ public final class ScheduleView extends CssLayout implements View {
     public void enter(final ViewChangeEvent event) {
     }
 
-    public static void displayDirectoryContents23(File dir) {
-//        try {
-        File[] files = dir.listFiles();
+    public List<File> directoryContents(File directory) {
+        // ARRAY QUE VA A ACONTENER TODOS LOS ARCHIVOS ORDENADOS POR TIPO Y ALFABETICAMENTE
+        List<File> allDocsLst = new ArrayList<>();
+        File[] files = directory.listFiles();
+        List<File> fileLst = new ArrayList<>();
+        List<File> directoryLst = new ArrayList<>();
         for (File file : files) {
             if (file.isDirectory()) {
-                //System.out.println("directory:");
                 //System.out.println("directory:" + file.getCanonicalPath());
-                System.out.println("DIR: " + file.getName());
-                System.out.println("No. Items DIR = " + file.list().length);
-                //displayDirectoryContents(file);   //para conocer los archivos de las subcarpetas
-                //System.out.println("DIR_PATH: " + fileEntry.getAbsolutePath());
+                directoryLst.add(file);
+                //recursiveFileDisplay(file);   //para conocer los archivos de las subcarpetas
             } else {
-                //System.out.println("     file:");
                 //System.out.println("     file:" + file.getCanonicalPath());
-                System.out.println("FILE: " + file.getName());
-                long fileSize = file.length();
-                String fileSizeDisplay = FileUtils.byteCountToDisplaySize(fileSize);
-                System.out.println("Size Display: " + fileSizeDisplay);
+                fileLst.add(file);
             }
-            //System.out.println(file.getCanonicalPath());
-
         }
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        }
+        allDocsLst.addAll(directoryLst);
+        allDocsLst.addAll(fileLst);
+
+        return allDocsLst;
+    }
+    
+    public List<File> directoryContents23(File directory) {
+        // ARRAY QUE VA A ACONTENER TODOS LOS ARCHIVOS ORDENADOS POR TIPO Y ALFABETICAMENTE
+        List<File> allDocsLst = new ArrayList<>();
+        try {
+            File[] files = directory.listFiles();
+            // ARRAY DONDE SE ALMACENAN LOS ARCHIVOS DE TIPO "DIRECTORY"
+            List<File> fileLst = new ArrayList<>();
+            // ARRAY DONDE SE ALMACENAN LOS ARCHIVOS DE TIPO "FILE"
+            List<File> directoryLst = new ArrayList<>();
+
+            // RECORRO LA LISTA DE LOS ARCHIVOS QUE CONTIENE EL DIRECTORIO, PARA LUEGO SEPARARLOS POR TIPO
+            for (File file : files) {
+                if (file.isDirectory()) {
+                    System.out.println("directory:" + file.getCanonicalPath());
+                    directoryLst.add(file);
+                    directoryContents23(file);   //para conocer los archivos de las subcarpetas
+                } else {
+                    System.out.println("     file:" + file.getCanonicalPath());
+                    fileLst.add(file);
+                }
+            }
+            // AGREGO LOS VALORES DE CADA ARRAY DE TIPO "DIRECTORY" Y "FILE" AL ARRAY FINAL
+            allDocsLst.addAll(directoryLst);
+            allDocsLst.addAll(fileLst);
+
+//            allDocsLst.stream().forEach((docs) -> {
+//                System.out.println("docs = " + docs);
+//            });
+        } catch (IOException e) {
+        }
+
+        return allDocsLst;
     }
 
     private ThemeResource iconExtension(File file) {
@@ -294,22 +289,22 @@ public final class ScheduleView extends CssLayout implements View {
     }
 
     private void displaySubDirectoryContents(File file) {
-        cleanAndBuild(file.getAbsolutePath());
+        cleanAndBuild(file);
 
         String root = "Archivos";
-        String directory = nameDir(file, path);
+        String directory = nameDir(file, origenPath.getAbsolutePath());
         String[] arrayDirectories = directory.split("\\\\");
 
         for (String lblDirectory : arrayDirectories) {
             lblArrow = new Label(FontAwesome.ANGLE_RIGHT.getHtml(), ContentMode.HTML);
             lblArrow.addStyleName(ValoTheme.LABEL_COLORED);
-            btnFolder = component.createButton(lblDirectory);
+            btnFolder = component.createButtonPath(lblDirectory);
             btnFolder.addClickListener(e -> {
                 String newRoot = e.getComponent().getCaption();
                 String directorys = file.getAbsolutePath();
                 int inicio = directorys.indexOf(newRoot);
                 String dir = directorys.substring(0, inicio + newRoot.length());
-                cleanAndBuild(dir);
+                cleanAndBuild(new File(dir));
 
                 File newPath = new File(dir);
                 displaySubDirectoryContents(newPath);
@@ -341,7 +336,7 @@ public final class ScheduleView extends CssLayout implements View {
         return substring;
     }
 
-    private void cleanAndBuild(String directory) {
+    private void cleanAndBuild(File directory) {
         tabs.removeAllComponents();
         tabs.addComponent(buildToolBar());
         tabs.addComponent(buildPath());
@@ -399,18 +394,15 @@ public final class ScheduleView extends CssLayout implements View {
         create = new Button("Crear");
         create.addStyleName(ValoTheme.BUTTON_PRIMARY);
         create.setEnabled(false);
-        create.addClickListener(new ClickListener() {
-            @Override
-            public void buttonClick(ClickEvent event) {
-                File directory = new File(path + "/" + txtNameFolder.getValue());
-                System.out.println("directory = " + directory);
-                directory.mkdir();
+        create.addClickListener((ClickEvent event) -> {
+            File directory = new File(path + "\\" + txtNameFolder.getValue());
+            System.out.println("directory = " + directory);
+            directory.mkdir();
 
-                //notification.createSuccess();
-                Notifications notification = new Notifications();
-                notification.createFailure("Problemas con la creación");
-                window.close();
-            }
+            notification.createSuccess("Se cargó con éxito");
+            window.close();
+            System.out.println("path = " + path.getAbsolutePath());
+            cleanAndBuild(path);
         });
         footer.addComponent(create);
         footer.setComponentAlignment(create, Alignment.TOP_RIGHT);
@@ -420,6 +412,123 @@ public final class ScheduleView extends CssLayout implements View {
         content.addComponent(footer);
 
         return window;
+    }
+
+    private Plupload uploadContents() {
+        String uploadPath = (path == null ? origenPath.getAbsolutePath() : path.getAbsolutePath());
+        System.out.println("uploadPath = " + uploadPath);
+        Plupload uploader = new Plupload("Cargar", FontAwesome.UPLOAD);
+
+        uploader.setPreventDuplicates(true);
+        uploader.addStyleName(ValoTheme.BUTTON_PRIMARY);
+        uploader.addStyleName(ValoTheme.BUTTON_SMALL);
+        uploader.setUploadPath(uploadPath);
+        uploader.setMaxFileSize("5mb");
+
+//show notification after file is uploaded
+        uploader.addFileUploadedListener(new Plupload.FileUploadedListener() {
+            @Override
+            public void onFileUploaded(PluploadFile file) {
+
+                /**
+                 * CAMBIAR EL NOMBRE DEL ARCHIVO QUE SE SUBE, YA QUE NO RESPETA
+                 * EL NOMBRE DEL ARCHIVO ORIGINAL
+                 */
+                File uploadedFile = (File) file.getUploadedFile();
+                // NOMBRE CORRECTO
+                String realName = file.getName();
+                // NOMBRE INCORRECTO
+                String falseName = uploadedFile.getName();
+                // PATH DEL ARCHIVO
+                String pathFile = uploadedFile.getAbsolutePath();
+                pathFile = pathFile.substring(0, pathFile.lastIndexOf("\\"));
+                // SE CREAN LOS OBJETIPOS DE TIPO FILE DE CADA UNO
+                File fileFalse = new File(pathFile + "\\" + falseName);
+                File fileReal = new File(pathFile + "\\" + realName);
+                // SE REALIZA EL CAMBIO DE NOMBRE DEL ARCHIVO
+                boolean cambio = fileFalse.renameTo(fileReal);
+
+                // SE RECARGA LA PAGINA, PARA MOSTRAR EL ARCHIVO CARGADO
+                cleanAndBuild(new File(uploadPath));
+                notification.createSuccess("Se cargó el archivo: " + file.getName());
+            }
+        });
+
+//update upload progress
+        uploader.addUploadProgressListener(new Plupload.UploadProgressListener() {
+            @Override
+            public void onUploadProgress(PluploadFile file) {
+
+                progressBar.setWidth("128px");
+                //progressBar.setStyleName(ValoTheme.PROGRESSBAR_POINT);
+                progressBar.setVisible(true);
+
+                progressBar.setValue(new Long(file.getPercent()).floatValue() / 100);
+                progressBar.setDescription(file.getPercent() + "%");
+
+                System.out.println("I'm uploading " + file.getName()
+                        + "and I'm at " + file.getPercent() + "%");
+            }
+        });
+
+//autostart the uploader after addind files
+        uploader.addFilesAddedListener(new Plupload.FilesAddedListener() {
+            @Override
+            public void onFilesAdded(PluploadFile[] files) {
+                progressBar.setValue(0f);
+                progressBar.setVisible(true);
+                uploader.start();
+            }
+        });
+
+//notify, when the upload process is completed
+        uploader.addUploadCompleteListener(new Plupload.UploadCompleteListener() {
+            @Override
+            public void onUploadComplete() {
+                System.out.println("upload is completed!");
+            }
+        });
+
+//handle errors
+        uploader.addErrorListener(new Plupload.ErrorListener() {
+            @Override
+            public void onError(PluploadError error) {
+                Notification.show("There was an error: "
+                        + error.getMessage(), Notification.Type.ERROR_MESSAGE);
+            }
+        });
+
+        return uploader;
+    }
+
+    private void fillMenu(ContextMenu menu) {
+        MenuItem editar = menu.addItem("Editar", e -> {
+            Window w = createWindow();
+            UI.getCurrent().addWindow(w);
+            w.focus();
+        });
+        editar.setIcon(FontAwesome.PENCIL);
+
+        MenuItem borrar = menu.addItem("Borrar", e -> {
+            Notification.show("disabled");
+        });
+        borrar.setIcon(FontAwesome.TRASH);
+
+        // SEPARADOR
+        if (menu instanceof ContextMenu) {
+            ((ContextMenu) menu).addSeparator();
+        }
+
+        MenuItem item3 = menu.addItem("Invisible", e -> {
+            Notification.show("invisible");
+        });
+
+//        MenuItem item6 = menu.addItem("Submenu", e -> {
+//        });
+//        item6.addItem("Subitem", e -> Notification.show("SubItem"));
+//        item6.addSeparator();
+//        item6.addItem("Subitem", e -> Notification.show("SubItem"))
+//                .setDescription("Test");
     }
 
 }
