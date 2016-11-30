@@ -7,6 +7,7 @@ import com.vaadin.demo.dashboard.utils.Components;
 import com.vaadin.demo.dashboard.utils.Notifications;
 import com.vaadin.event.FieldEvents;
 import com.vaadin.event.LayoutEvents.LayoutClickEvent;
+import com.vaadin.event.ShortcutAction;
 import com.vaadin.navigator.View;
 import com.vaadin.navigator.ViewChangeListener.ViewChangeEvent;
 import com.vaadin.server.FileResource;
@@ -64,6 +65,8 @@ public final class ScheduleView extends CssLayout implements View {
     private HorizontalLayout toolBar;
     private Window window;
     private Button create;
+    private Button save;
+    private Button cancel;
     private final ProgressBar progressBar = new ProgressBar(0.0f);
     private final Notifications notification = new Notifications();
 
@@ -150,7 +153,7 @@ public final class ScheduleView extends CssLayout implements View {
         catalog.addStyleName("catalog");
 
         File currentDir = new File(path.getAbsolutePath());
-        List<File> files = (List<File>)directoryContents(currentDir);
+        List<File> files = (List<File>) component.directoryContents(currentDir);
 
         //for (final File file : files) {
         files.stream().map((file) -> {
@@ -185,8 +188,8 @@ public final class ScheduleView extends CssLayout implements View {
             String label = (file.isDirectory()
                     ? String.valueOf(file.list().length == 0
                             ? "" : file.list().length) + (file.list().length > 1
-                    ? " elementos" : file.list().length == 0
-                    ? "vacío" : " elemento")
+                            ? " elementos" : file.list().length == 0
+                                    ? "vacío" : " elemento")
                     : fileSizeDisplay);
             Label detailsFile = new Label(label);
             detailsFile.addStyleName(ValoTheme.LABEL_TINY);
@@ -203,17 +206,16 @@ public final class ScheduleView extends CssLayout implements View {
                 }
             });
             ContextMenu contextMenu = new ContextMenu(this, false);
-            fillMenu(contextMenu);
+            fillMenu(contextMenu, file);
             contextMenu.setAsContextMenuOf(frame);
             mainPanel.addComponent(frame);
             return mainPanel;
         }).forEach((mainPanel) -> {
             catalog.addComponent(mainPanel);
-        }); 
-        
+        });
+
         //File currentDir2 = new File("C:\\Users\\Edrd\\Documents\\GitHub\\fileManager\\Archivos"); // current directory
         //directoryContents23(currentDir2);
-        
         return catalog;
     }
 
@@ -242,7 +244,7 @@ public final class ScheduleView extends CssLayout implements View {
 
         return allDocsLst;
     }
-    
+
     public List<File> directoryContents23(File directory) {
         // ARRAY QUE VA A ACONTENER TODOS LOS ARCHIVOS ORDENADOS POR TIPO Y ALFABETICAMENTE
         List<File> allDocsLst = new ArrayList<>();
@@ -414,6 +416,100 @@ public final class ScheduleView extends CssLayout implements View {
         return window;
     }
 
+    private Window createWindowEdit(File file) {
+        window = new Window();
+        window.addStyleName("createfolder-window");
+        Responsive.makeResponsive(this);
+
+        window.setModal(true);
+        window.setResizable(false);
+        window.setClosable(true);
+        window.setHeight(90.0f, Sizeable.Unit.PERCENTAGE);
+        //window.setWidth(300.0f, Unit.PIXELS);
+
+        VerticalLayout content = new VerticalLayout();
+        content.setSizeFull();
+        window.setContent(content);
+
+        TabSheet detailsWrapper = new TabSheet();
+        detailsWrapper.setSizeFull();
+        detailsWrapper.addStyleName(ValoTheme.TABSHEET_PADDED_TABBAR);
+        content.addComponent(detailsWrapper);
+        content.setExpandRatio(detailsWrapper, 1f);
+
+        /*[ NAMEFOLDER ]*/
+        VerticalLayout body = new VerticalLayout();
+        body.setCaption("Editar");
+        body.setSizeFull();
+        body.setSpacing(true);
+        body.setMargin(true);
+
+        TextField editNameTxt = new TextField();
+        editNameTxt.focus();
+        editNameTxt.setWidth(100.0f, Sizeable.Unit.PERCENTAGE);
+        editNameTxt.setInputPrompt("Nuevo nombre del archivo");
+        editNameTxt.setImmediate(true);
+        editNameTxt.addTextChangeListener((FieldEvents.TextChangeEvent event) -> {
+            save.setEnabled(StringUtils.isNotBlank(event.getText()));
+        });
+
+        body.addComponent(editNameTxt);
+        body.setComponentAlignment(editNameTxt, Alignment.MIDDLE_CENTER);
+        /*[ /NAMEFOLDER ]*/
+
+ /*[ FOOTER ]*/
+        HorizontalLayout footer = new HorizontalLayout();
+        footer.setSpacing(true);
+        footer.addStyleName(ValoTheme.WINDOW_BOTTOM_TOOLBAR);
+        footer.setWidth(100.0f, Sizeable.Unit.PERCENTAGE);
+
+        cancel = new Button("Cancelar");
+        cancel.addClickListener(new Button.ClickListener() {
+            @Override
+            public void buttonClick(Button.ClickEvent event) {
+                window.close();
+            }
+        });
+        cancel.setClickShortcut(ShortcutAction.KeyCode.ESCAPE, null);
+
+        save = new Button("Guardar");
+        save.addStyleName(ValoTheme.BUTTON_PRIMARY);
+        save.setEnabled(false);
+        save.addClickListener((ClickEvent event) -> {
+            // NUEVO NOMBRE
+            String newName = editNameTxt.getValue();
+            // EXTENSION DEL ARCHIVO
+            String extension = file.getName().substring(file.getName().lastIndexOf('.') + 1);
+            // PATH DEL ARCHIVO
+            String pathFile = file.getAbsolutePath();
+            pathFile = pathFile.substring(0, pathFile.lastIndexOf("\\"));
+            // SE CREA EL OBJETO DE TIPO FILE DEL NUEVO NOMBRE
+            File fileNew = new File(pathFile + "\\" + newName + "." + extension);
+            // SE REALIZA EL CAMBIO DE NOMBRE DEL ARCHIVO
+            boolean cambio = file.renameTo(fileNew);
+
+            if (cambio) {
+                // SE RECARGA LA PAGINA, PARA MOSTRAR EL ARCHIVO CARGADO
+                cleanAndBuild(new File(pathFile));
+                notification.createSuccess("Se guardo con éxito");
+            } else {
+                notification.createFailure("No se guardo el cambio");
+            }
+            window.close();
+        });
+        save.setClickShortcut(ShortcutAction.KeyCode.ENTER, null);
+        
+        footer.addComponents(cancel, save);
+        footer.setExpandRatio(cancel, 1);
+        footer.setComponentAlignment(cancel, Alignment.TOP_RIGHT);
+        /*[ /FOOTER ]*/
+
+        detailsWrapper.addComponent(body);
+        content.addComponent(footer);
+
+        return window;
+    }
+
     private Plupload uploadContents() {
         String uploadPath = (path == null ? origenPath.getAbsolutePath() : path.getAbsolutePath());
         System.out.println("uploadPath = " + uploadPath);
@@ -501,9 +597,9 @@ public final class ScheduleView extends CssLayout implements View {
         return uploader;
     }
 
-    private void fillMenu(ContextMenu menu) {
+    private void fillMenu(ContextMenu menu, File file) {
         MenuItem editar = menu.addItem("Editar", e -> {
-            Window w = createWindow();
+            Window w = createWindowEdit(file);
             UI.getCurrent().addWindow(w);
             w.focus();
         });

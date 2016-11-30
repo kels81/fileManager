@@ -10,6 +10,9 @@ import com.vaadin.ui.CheckBox;
 import com.vaadin.ui.MenuBar;
 import com.vaadin.ui.TextField;
 import com.vaadin.ui.themes.ValoTheme;
+import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  *
@@ -52,6 +55,28 @@ public class Components {
         menu.addStyleName(ValoTheme.MENUBAR_SMALL);
         menu.addStyleName("primary");
         return menu;
+    }
+    
+    
+    
+    public List<File> directoryContents(File directory) {
+        // ARRAY QUE VA A ACONTENER TODOS LOS ARCHIVOS ORDENADOS POR TIPO Y ALFABETICAMENTE
+        List<File> allDocsLst = new ArrayList<>();
+        File[] files = directory.listFiles();
+        List<File> fileLst = new ArrayList<>();
+        List<File> directoryLst = new ArrayList<>();
+        for (File file : files) {
+            if (file.isDirectory()) {
+                directoryLst.add(file);
+                //directoryContents(file);   //para conocer los archivos de las subcarpetas
+            } else {
+                fileLst.add(file);
+            }
+        }
+        allDocsLst.addAll(directoryLst);
+        allDocsLst.addAll(fileLst);
+
+        return allDocsLst;
     }
     
     
