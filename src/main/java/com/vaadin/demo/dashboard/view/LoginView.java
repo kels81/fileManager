@@ -60,7 +60,7 @@ public class LoginView extends VerticalLayout {
         final Button signin = new Button("Entrar");
         signin.addStyleName(ValoTheme.BUTTON_PRIMARY);
         signin.setClickShortcut(KeyCode.ENTER);
-        signin.focus();
+        //signin.focus();
 
         fields.addComponents(username, password, signin);
         fields.setComponentAlignment(signin, Alignment.BOTTOM_LEFT);

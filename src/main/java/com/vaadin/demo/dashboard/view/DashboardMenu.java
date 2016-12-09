@@ -86,7 +86,7 @@ public final class DashboardMenu extends CustomComponent {
     }
 
     private Component buildTitle() {
-        Label logo = new Label("QuickTickets <strong>Dashboard</strong>",
+        Label logo = new Label("File <strong>Manager</strong>",
                 ContentMode.HTML);
         logo.setSizeUndefined();
         HorizontalLayout logoWrapper = new HorizontalLayout(logo);

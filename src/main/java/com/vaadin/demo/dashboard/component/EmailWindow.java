@@ -5,28 +5,33 @@
  */
 package com.vaadin.demo.dashboard.component;
 
+import com.google.common.eventbus.Subscribe;
 import com.vaadin.data.Container;
 import com.vaadin.data.Item;
 import com.vaadin.data.util.HierarchicalContainer;
 import com.vaadin.data.validator.EmailValidator;
+import com.vaadin.demo.dashboard.event.DashboardEvent;
 import com.vaadin.demo.dashboard.utils.Components;
 import com.vaadin.demo.dashboard.utils.Mail;
 import com.vaadin.demo.dashboard.utils.Notifications;
 import com.vaadin.event.Action;
-import com.vaadin.event.FieldEvents;
-import com.vaadin.event.ShortcutAction;
 import com.vaadin.server.FontAwesome;
+import com.vaadin.server.Page;
 import com.vaadin.server.Responsive;
 import com.vaadin.server.ThemeResource;
 import com.vaadin.shared.ui.MarginInfo;
+import com.vaadin.shared.ui.label.ContentMode;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.FormLayout;
 import com.vaadin.ui.HorizontalLayout;
+import com.vaadin.ui.Image;
 import com.vaadin.ui.Label;
+import com.vaadin.ui.Notification;
 import com.vaadin.ui.RichTextArea;
 import com.vaadin.ui.TabSheet;
+import com.vaadin.ui.TextArea;
 import com.vaadin.ui.TextField;
 import com.vaadin.ui.Tree;
 import com.vaadin.ui.UI;
@@ -101,7 +106,9 @@ public class EmailWindow extends Window {
 
         adjuntar = new HorizontalLayout();
         adjuntar.setSpacing(true);
-        adjuntar.setSizeUndefined();
+        //adjuntar.setSizeUndefined();
+        adjuntar.addStyleName("attachedfiles");
+        Responsive.makeResponsive(adjuntar);
 
         filesAttached = new VerticalLayout();
         filesAttached.setVisible(false);
@@ -120,6 +127,7 @@ public class EmailWindow extends Window {
             }
         });
         adjuntar.addComponent(btnAdjuntar);
+        adjuntar.setComponentAlignment(btnAdjuntar, Alignment.MIDDLE_LEFT);
 
         form = new FormLayout();
         form.setMargin(false);
@@ -175,7 +183,6 @@ public class EmailWindow extends Window {
                 close();
             }
         });
-        cancelar.setClickShortcut(ShortcutAction.KeyCode.ESCAPE, null);
 
         enviar = new Button("Enviar");
         enviar.addStyleName(ValoTheme.BUTTON_PRIMARY);
@@ -209,14 +216,12 @@ public class EmailWindow extends Window {
                     }
 
                     close();
+                } else {
+                    notification.createFailure("Favor de revisar los campos");
                 }
-                
-                notification.createFailure("Favor de revisar los campos");
 
             }
         });
-        enviar.focus();
-        enviar.setClickShortcut(ShortcutAction.KeyCode.ENTER, null);
 
         footer.addComponents(cancelar, enviar);
         footer.setExpandRatio(cancelar, 1);
@@ -278,19 +283,43 @@ public class EmailWindow extends Window {
             @Override
             public void handleAction(Action action, Object sender, Object target) {
                 if (action == ADJUNTAR) {
+                    //AQUI VER DSADA                   
                     Item item = tree.getItem(target);
                     String path = item.getItemProperty("path").getValue().toString();
                     String name = path.substring(path.lastIndexOf('\\') + 1);
 
-                    Label nameFile = new Label();
-                    nameFile.setIcon(new ThemeResource("img/file_manager/file_16.png"));
-                    nameFile.setCaption(name);
-                    nameFile.addStyleName(ValoTheme.LABEL_TINY);
-
-                    adjuntar.addComponent(nameFile);
-
                     Label pathFile = new Label();
                     pathFile.setCaption(path);
+
+                    HorizontalLayout adjLayout = new HorizontalLayout();
+                    adjLayout.addStyleName("attachedlayout");
+
+                    Label nameFile = new Label("&nbsp;" + FontAwesome.FILE_TEXT_O.getHtml() + "&nbsp;" + name + "&nbsp;");
+                    nameFile.setContentMode(ContentMode.HTML);
+                    nameFile.addStyleName(ValoTheme.LABEL_LIGHT);
+                    nameFile.addStyleName(ValoTheme.LABEL_SMALL);
+                    //nameFile.setSizeUndefined();
+
+                    Button delete = new Button("×");
+                    delete.setDescription("Delete draft");
+                    delete.setPrimaryStyleName("deleteBtn");
+                    delete.addClickListener(new Button.ClickListener() {
+                        @Override
+                        public void buttonClick(final Button.ClickEvent event) {
+                            // ELIMINAR LABEL DEL ARCHIVO QUE VE EL USUARIO
+                            adjuntar.removeComponent(adjLayout);
+                            // ELIMINAR TAMBIEN EL PATH DEL ARCHIVO QUE SE ENCUENTRA OCULTO
+                            // EL QUE SE MANDA POR CORREO
+                            filesAttached.removeComponent(pathFile);
+                        }
+                    });
+
+                    adjLayout.addComponents(nameFile, delete);
+                    //adjLayout.setComponentAlignment(nameFile, Alignment.MIDDLE_LEFT);
+
+                    // NOMBRE DE ARCHIVOS QUE VE EL USAURIO
+                    adjuntar.addComponent(adjLayout);
+                    // LA RUTA DE LOS ARCHIVOS QUE VE EL USUARIO, PERO QUE SE ENCUENTRA OCULTO
                     filesAttached.addComponent(pathFile);
 
 //                    List arrayAdjuntos = new ArrayList();
@@ -372,7 +401,7 @@ public class EmailWindow extends Window {
                 close();
             }
         });
-        ok.focus();
+        //ok.focus();
         //footer.addComponent(ok);
         //footer.setComponentAlignment(ok, Alignment.TOP_RIGHT);
         return footer;

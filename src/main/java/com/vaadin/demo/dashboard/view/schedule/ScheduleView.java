@@ -2,6 +2,7 @@ package com.vaadin.demo.dashboard.view.schedule;
 
 import com.vaadin.addon.contextmenu.MenuItem;
 import com.vaadin.addon.contextmenu.ContextMenu;
+import com.vaadin.addon.contextmenu.Menu;
 import com.vaadin.demo.dashboard.component.EmailWindow;
 import com.vaadin.demo.dashboard.utils.Components;
 import com.vaadin.demo.dashboard.utils.Notifications;
@@ -30,6 +31,7 @@ import com.vaadin.ui.Image;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.MenuBar;
 import com.vaadin.ui.Notification;
+import com.vaadin.ui.Panel;
 import com.vaadin.ui.ProgressBar;
 import com.vaadin.ui.TabSheet;
 import com.vaadin.ui.TextField;
@@ -40,18 +42,17 @@ import com.vaadin.ui.themes.ValoTheme;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
-import org.apache.commons.io.filefilter.TrueFileFilter;
 import org.apache.commons.lang3.StringUtils;
 import pl.exsio.plupload.Plupload;
 import pl.exsio.plupload.PluploadError;
 import pl.exsio.plupload.PluploadFile;
+import pl.exsio.plupload.helper.filter.PluploadFilter;
 
 @SuppressWarnings("serial")
-public final class ScheduleView extends CssLayout implements View {
+public final class ScheduleView extends Panel implements View {
 
     private ThemeResource iconResource;
     private File path;
@@ -73,14 +74,15 @@ public final class ScheduleView extends CssLayout implements View {
     public ScheduleView() {
         this.origenPath = new File("C:\\Users\\Edrd\\Documents\\GitHub\\fileManager\\Archivos");
         //this.path = VaadinService.getCurrent().getBaseDirectory() + "/VAADIN/themes/UPLOADS/";
+        
         setSizeFull();
         addStyleName("schedule");
+       //addStyleName(ValoTheme.PANEL_BORDERLESS);
 
         tabs = new VerticalLayout();
-        tabs.setSizeFull();
-        tabs.addStyleName(ValoTheme.TABSHEET_PADDED_TABBAR);
+        //tabs.setSizeFull();
 
-        tabs.addComponent(buildToolBar());
+        tabs.addComponent(buildToolBar(origenPath));
         tabs.addComponent(buildPath());
         directoryContent = displayDirectoryContents(origenPath);
         tabs.addComponent(directoryContent);
@@ -88,11 +90,13 @@ public final class ScheduleView extends CssLayout implements View {
 
         progressBar.setCaption("Progress");
 
-        addComponent(tabs);
-        addComponent(progressBar);
+        //addComponent(tabs);
+        //addComponent(progressBar);
+        setContent(tabs);
+        Responsive.makeResponsive(tabs);
     }
 
-    private Component buildToolBar() {
+    private Component buildToolBar(File directory) {
         toolBar = new HorizontalLayout();
         //toolBar.setWidth(100.0f, Sizeable.Unit.PERCENTAGE);
         toolBar.setSpacing(true);
@@ -117,7 +121,8 @@ public final class ScheduleView extends CssLayout implements View {
             w.focus();
         });
 
-        Plupload uploader = uploadContents();
+        // CARGAR
+        Plupload uploader = uploadContents(directory);
 
         toolBar.addComponent(menubar);
         toolBar.addComponent(uploader);
@@ -151,6 +156,7 @@ public final class ScheduleView extends CssLayout implements View {
 
         CssLayout catalog = new CssLayout();
         catalog.addStyleName("catalog");
+        catalog.setSizeUndefined();
 
         File currentDir = new File(path.getAbsolutePath());
         List<File> files = (List<File>) component.directoryContents(currentDir);
@@ -163,14 +169,14 @@ public final class ScheduleView extends CssLayout implements View {
             frame.addStyleName("frame");
             frame.setMargin(true);
             frame.addStyleName(ValoTheme.LAYOUT_CARD);
-            frame.setWidth(200.0f, Unit.PIXELS);
+            frame.setWidth(190.0f, Unit.PIXELS);
             HorizontalLayout fileLayout = new HorizontalLayout();
             //fileLayout.setSpacing(true);
             //fileLayout.setDescription(file.getName());
             frame.addComponent(fileLayout);
             Image fileType = new Image(null, iconExtension(file));
-            fileType.setWidth(55.0f, Unit.PIXELS);
-            fileType.setHeight(50.0f, Unit.PIXELS);
+            fileType.setWidth(45.0f, Unit.PIXELS);
+            fileType.setHeight(48.0f, Unit.PIXELS);
             fileLayout.addComponent(fileType);
             VerticalLayout nameDetailsFile = new VerticalLayout();
             fileLayout.addComponent(nameDetailsFile);
@@ -202,6 +208,9 @@ public final class ScheduleView extends CssLayout implements View {
                         displaySubDirectoryContents(file);
                     } else if (file.isFile()) {
                         //downloadContents(file);
+//                        Window w = new ViewerWindow(file);;
+//                        UI.getCurrent().addWindow(w);
+//                        w.focus();
                     }
                 }
             });
@@ -306,10 +315,9 @@ public final class ScheduleView extends CssLayout implements View {
                 String directorys = file.getAbsolutePath();
                 int inicio = directorys.indexOf(newRoot);
                 String dir = directorys.substring(0, inicio + newRoot.length());
-                cleanAndBuild(new File(dir));
 
-                File newPath = new File(dir);
-                displaySubDirectoryContents(newPath);
+                cleanAndBuild(new File(dir));
+                displaySubDirectoryContents(new File(dir));
 
             });
 
@@ -333,14 +341,16 @@ public final class ScheduleView extends CssLayout implements View {
         String root = nameDir;
         String directory = file.getAbsolutePath();
         int inicio = directory.indexOf(root);
-        String substring = directory.substring(inicio + root.length() + 1);
+        // SE REALIZA ESTA VALIDACION PARA EVITAR ERRORES EN LA VISTA DE LOS ARCHIVOS DEL FOLDER "ARCHIVOS" UNICAMENTE
+        int uno = root.equals(directory) ? 0 : 1;
+        String substring = directory.substring(inicio + root.length() + uno);
 
         return substring;
     }
 
     private void cleanAndBuild(File directory) {
         tabs.removeAllComponents();
-        tabs.addComponent(buildToolBar());
+        tabs.addComponent(buildToolBar(directory));
         tabs.addComponent(buildPath());
         directoryContent = displayDirectoryContents(directory);
         tabs.addComponent(directoryContent);
@@ -393,7 +403,8 @@ public final class ScheduleView extends CssLayout implements View {
         footer.addStyleName(ValoTheme.WINDOW_BOTTOM_TOOLBAR);
         footer.setWidth(100.0f, Sizeable.Unit.PERCENTAGE);
 
-        create = new Button("Crear");
+        create = component.createButton("Crear");
+        create.focus();
         create.addStyleName(ValoTheme.BUTTON_PRIMARY);
         create.setEnabled(false);
         create.addClickListener((ClickEvent event) -> {
@@ -405,7 +416,10 @@ public final class ScheduleView extends CssLayout implements View {
             window.close();
             System.out.println("path = " + path.getAbsolutePath());
             cleanAndBuild(path);
+            displaySubDirectoryContents(path);
         });
+        create.setClickShortcut(ShortcutAction.KeyCode.ENTER, null);
+
         footer.addComponent(create);
         footer.setComponentAlignment(create, Alignment.TOP_RIGHT);
         /*[ /FOOTER ]*/
@@ -448,6 +462,8 @@ public final class ScheduleView extends CssLayout implements View {
         editNameTxt.focus();
         editNameTxt.setWidth(100.0f, Sizeable.Unit.PERCENTAGE);
         editNameTxt.setInputPrompt("Nuevo nombre del archivo");
+        editNameTxt.setTextChangeEventMode(AbstractTextField.TextChangeEventMode.EAGER);          //EAGER, Para que evento no sea lento
+        editNameTxt.setTextChangeTimeout(200);
         editNameTxt.setImmediate(true);
         editNameTxt.addTextChangeListener((FieldEvents.TextChangeEvent event) -> {
             save.setEnabled(StringUtils.isNotBlank(event.getText()));
@@ -464,6 +480,7 @@ public final class ScheduleView extends CssLayout implements View {
         footer.setWidth(100.0f, Sizeable.Unit.PERCENTAGE);
 
         cancel = new Button("Cancelar");
+        cancel.addStyleName(ValoTheme.BUTTON_SMALL);
         cancel.addClickListener(new Button.ClickListener() {
             @Override
             public void buttonClick(Button.ClickEvent event) {
@@ -472,7 +489,7 @@ public final class ScheduleView extends CssLayout implements View {
         });
         cancel.setClickShortcut(ShortcutAction.KeyCode.ESCAPE, null);
 
-        save = new Button("Guardar");
+        save = component.createButton("Guardar");
         save.addStyleName(ValoTheme.BUTTON_PRIMARY);
         save.setEnabled(false);
         save.addClickListener((ClickEvent event) -> {
@@ -491,6 +508,7 @@ public final class ScheduleView extends CssLayout implements View {
             if (cambio) {
                 // SE RECARGA LA PAGINA, PARA MOSTRAR EL ARCHIVO CARGADO
                 cleanAndBuild(new File(pathFile));
+                displaySubDirectoryContents(new File(pathFile));
                 notification.createSuccess("Se guardo con éxito");
             } else {
                 notification.createFailure("No se guardo el cambio");
@@ -498,7 +516,7 @@ public final class ScheduleView extends CssLayout implements View {
             window.close();
         });
         save.setClickShortcut(ShortcutAction.KeyCode.ENTER, null);
-        
+
         footer.addComponents(cancel, save);
         footer.setExpandRatio(cancel, 1);
         footer.setComponentAlignment(cancel, Alignment.TOP_RIGHT);
@@ -510,16 +528,18 @@ public final class ScheduleView extends CssLayout implements View {
         return window;
     }
 
-    private Plupload uploadContents() {
-        String uploadPath = (path == null ? origenPath.getAbsolutePath() : path.getAbsolutePath());
+    private Plupload uploadContents(File directory) {
+
+        String uploadPath = directory.getAbsolutePath();
         System.out.println("uploadPath = " + uploadPath);
         Plupload uploader = new Plupload("Cargar", FontAwesome.UPLOAD);
-
+        //uploader.addFilter(new PluploadFilter("music", "mp3, flac"));
         uploader.setPreventDuplicates(true);
         uploader.addStyleName(ValoTheme.BUTTON_PRIMARY);
         uploader.addStyleName(ValoTheme.BUTTON_SMALL);
         uploader.setUploadPath(uploadPath);
         uploader.setMaxFileSize("5mb");
+        
 
 //show notification after file is uploaded
         uploader.addFileUploadedListener(new Plupload.FileUploadedListener() {
@@ -538,6 +558,7 @@ public final class ScheduleView extends CssLayout implements View {
                 // PATH DEL ARCHIVO
                 String pathFile = uploadedFile.getAbsolutePath();
                 pathFile = pathFile.substring(0, pathFile.lastIndexOf("\\"));
+                System.out.println("pathFile = " + pathFile);
                 // SE CREAN LOS OBJETIPOS DE TIPO FILE DE CADA UNO
                 File fileFalse = new File(pathFile + "\\" + falseName);
                 File fileReal = new File(pathFile + "\\" + realName);
@@ -546,6 +567,7 @@ public final class ScheduleView extends CssLayout implements View {
 
                 // SE RECARGA LA PAGINA, PARA MOSTRAR EL ARCHIVO CARGADO
                 cleanAndBuild(new File(uploadPath));
+                displaySubDirectoryContents(new File(uploadPath));
                 notification.createSuccess("Se cargó el archivo: " + file.getName());
             }
         });
@@ -605,8 +627,13 @@ public final class ScheduleView extends CssLayout implements View {
         });
         editar.setIcon(FontAwesome.PENCIL);
 
-        MenuItem borrar = menu.addItem("Borrar", e -> {
-            Notification.show("disabled");
+        MenuItem borrar = menu.addItem("Borrar", new Menu.Command() {
+            @Override
+            public void menuSelected(MenuItem e) {
+                Window w = createWindowConfirm(file);
+                UI.getCurrent().addWindow(w);
+                w.focus();
+            }
         });
         borrar.setIcon(FontAwesome.TRASH);
 
@@ -625,6 +652,88 @@ public final class ScheduleView extends CssLayout implements View {
 //        item6.addSeparator();
 //        item6.addItem("Subitem", e -> Notification.show("SubItem"))
 //                .setDescription("Test");
+    }
+
+    private Window createWindowConfirm(File file) {
+        window = new Window();
+        window.addStyleName("createfolder-window");
+        Responsive.makeResponsive(this);
+
+        window.setModal(true);
+        window.setResizable(false);
+        window.setClosable(true);
+        window.setHeight(90.0f, Sizeable.Unit.PERCENTAGE);
+
+        VerticalLayout content = new VerticalLayout();
+        content.setSizeFull();
+        window.setContent(content);
+
+        TabSheet detailsWrapper = new TabSheet();
+        detailsWrapper.setSizeFull();
+        detailsWrapper.addStyleName(ValoTheme.TABSHEET_PADDED_TABBAR);
+        content.addComponent(detailsWrapper);
+        content.setExpandRatio(detailsWrapper, 1f);
+
+        /*[ NAMEFOLDER ]*/
+        VerticalLayout body = new VerticalLayout();
+        body.setCaption("Confirmar");
+        body.setSizeFull();
+        body.setSpacing(true);
+        body.setMargin(true);
+
+        Label messageLbl = new Label("Se eliminará el archivo");
+        //messageLbl.setCaption("Se eliminará el archivo");
+        messageLbl.setSizeUndefined();
+        messageLbl.addStyleName(ValoTheme.LABEL_LIGHT);
+        messageLbl.addStyleName(ValoTheme.LABEL_H4);
+
+        body.addComponent(messageLbl);
+        body.setComponentAlignment(messageLbl, Alignment.BOTTOM_CENTER);
+        /*[ /NAMEFOLDER ]*/
+
+ /*[ FOOTER ]*/
+        HorizontalLayout footer = new HorizontalLayout();
+        footer.setSpacing(true);
+        footer.addStyleName(ValoTheme.WINDOW_BOTTOM_TOOLBAR);
+        footer.setWidth(100.0f, Sizeable.Unit.PERCENTAGE);
+
+        cancel = new Button("Cancelar");
+        cancel.addStyleName(ValoTheme.BUTTON_SMALL);
+        cancel.addClickListener((ClickEvent event) -> {
+            window.close();
+        });
+        cancel.setClickShortcut(ShortcutAction.KeyCode.ESCAPE, null);
+
+        create = component.createButton("Aceptar");
+        create.focus();
+        create.addClickListener((ClickEvent event) -> {
+            // PATH DEL ARCHIVO
+            String pathFile = file.getAbsolutePath();
+            pathFile = pathFile.substring(0, pathFile.lastIndexOf("\\"));
+            // SE ELIMINA EL ARCHIVO
+            boolean eliminar = file.delete();
+
+            if (eliminar) {
+                // SE RECARGA LA PAGINA, PARA MOSTRAR LOS DEMAS ARCHIVOS
+                cleanAndBuild(new File(pathFile));
+                displaySubDirectoryContents(new File(pathFile));
+                notification.createSuccess("Se eliminó con éxito");
+            } else {
+                notification.createFailure("No se elimino el archivo");
+            }
+            window.close();
+        });
+        create.setClickShortcut(ShortcutAction.KeyCode.ENTER, null);
+
+        footer.addComponents(cancel, create);
+        footer.setExpandRatio(cancel, 1);
+        footer.setComponentAlignment(cancel, Alignment.TOP_RIGHT);
+        /*[ /FOOTER ]*/
+
+        detailsWrapper.addComponent(body);
+        content.addComponent(footer);
+
+        return window;
     }
 
 }

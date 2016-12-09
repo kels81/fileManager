@@ -48,26 +48,28 @@
                 transform: translateY(-100%);
             }
         }
-        
+
         .toolbarFile {
             padding: 17px;
             width: 100%;
             background-color: #f6f8fa ;
             border: 1px solid #dcdcdc;
         }
-        
+
         .barPath {
             padding: $view-padding/2;
+            width: 100%;
         }
-        
-        
+
+
 
         .catalog {
             padding: $view-padding/2;
+            overflow: visible;
 
             .mainPanel{
                 padding: round($view-padding / 3);
-                
+
                 .frame {
                     cursor: pointer;
                     padding: $view-padding/2;
@@ -82,7 +84,57 @@
 
 
         }
+    }
 
+    .attachedlayout {
+        cursor: pointer;
+        position: relative;
+
+        &:hover {
+            outline: 1px solid #5198df;
+        }
+    }
+
+    .deleteBtn {
+        width: 19px;
+        height: 19px;
+        border-radius: 10px;
+        background: #73767a;
+        color: #fff;
+        /*font: inherit;*/
+        font-weight: 600;
+        font-size: 17px;
+        line-height: 1;
+        /*text-shadow: 0 1px 0 rgba(0,0,0,.25);*/
+        text-align: center;
+        cursor: default;
+        @include box-shadow(0 2px 4px rgba(0,0,0,.5));
+    }
+
+    .deleteBtn:hover {
+        background: #4e5153;
+    }
+
+    .deleteBtn:focus {
+        outline: none;
+    }
+
+    .deleteBtn:active {
+        background: #3c3f40;
+    }
+
+    .attachedlayout .deleteBtn {
+        position: absolute;
+        display: none;
+    }
+
+    .attachedlayout:hover .deleteBtn {
+        display: block;
+    }
+    
+    .attachedfiles {
+        width: 100%;
+        white-space: normal;
     }
 
 }
