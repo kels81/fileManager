@@ -7,7 +7,7 @@ import com.vaadin.annotations.Title;
 import com.vaadin.annotations.Widgetset;
 import com.vaadin.demo.dashboard.data.DataProvider;
 import com.vaadin.demo.dashboard.data.dummy.DummyDataProvider;
-import com.vaadin.demo.dashboard.domain.Usuarios;
+import com.vaadin.demo.dashboard.entity.Usuarios;
 import com.vaadin.demo.dashboard.event.DashboardEvent.BrowserResizeEvent;
 import com.vaadin.demo.dashboard.event.DashboardEvent.CloseOpenWindowsEvent;
 import com.vaadin.demo.dashboard.event.DashboardEvent.UserLoggedOutEvent;

@@ -4,7 +4,7 @@ import com.vaadin.data.fieldgroup.BeanFieldGroup;
 import com.vaadin.data.fieldgroup.FieldGroup.CommitException;
 import com.vaadin.data.fieldgroup.PropertyId;
 import com.vaadin.demo.dashboard.domain.User;
-import com.vaadin.demo.dashboard.domain.Usuarios;
+import com.vaadin.demo.dashboard.entity.Usuarios;
 import com.vaadin.demo.dashboard.event.DashboardEvent.CloseOpenWindowsEvent;
 import com.vaadin.demo.dashboard.event.DashboardEvent.ProfileUpdatedEvent;
 import com.vaadin.demo.dashboard.event.DashboardEventBus;
@@ -71,8 +71,7 @@ public class ProfilePreferencesWindow extends Window {
 //    @PropertyId("bio")
 //    private TextArea bioField;
 
-    private ProfilePreferencesWindow(final Usuarios user,
-            final boolean preferencesTabOpen) {
+    private ProfilePreferencesWindow(final Usuarios user, final boolean preferencesTabOpen) {
         addStyleName("profile-window");
         setId(ID);
         Responsive.makeResponsive(this);

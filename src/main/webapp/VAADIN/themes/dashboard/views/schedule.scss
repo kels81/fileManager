@@ -89,30 +89,33 @@
     .attachedlayout {
         cursor: pointer;
         position: relative;
-
+        padding-right: 20px;
+        
         &:hover {
             outline: 1px solid #5198df;
         }
     }
 
     .deleteBtn {
-        width: 19px;
+        width: 16px;
         height: 19px;
-        border-radius: 10px;
-        background: #73767a;
-        color: #fff;
+        //border-radius: 10px;
+        //background: #73767a;
+        //color: #fff;
+        color: #197de1;
         /*font: inherit;*/
         font-weight: 600;
-        font-size: 17px;
+        font-size: 18px;
         line-height: 1;
         /*text-shadow: 0 1px 0 rgba(0,0,0,.25);*/
         text-align: center;
         cursor: default;
-        @include box-shadow(0 2px 4px rgba(0,0,0,.5));
+        //@include box-shadow(0 2px 4px rgba(0,0,0,.5));
     }
 
     .deleteBtn:hover {
-        background: #4e5153;
+        //background: #4e5153;
+        background: #e3f2fd;
     }
 
     .deleteBtn:focus {
@@ -120,7 +123,8 @@
     }
 
     .deleteBtn:active {
-        background: #3c3f40;
+        //background: #3c3f40;
+        background: #ffffff;
     }
 
     .attachedlayout .deleteBtn {
@@ -131,10 +135,85 @@
     .attachedlayout:hover .deleteBtn {
         display: block;
     }
-    
+
     .attachedfiles {
-        width: 100%;
-        white-space: normal;
+        padding: round($view-padding / 5);
+    }
+
+    .address-editor {
+        cursor: text;
+        .v-textfield {
+            border: 0px solid white;
+            &:focus {
+                @include box-shadow(none);
+            }
+        }
+        /*        .v-button:focus:after {
+                    border-color: inherit;
+                    @include box-shadow(none);
+                }
+                .v-button-small {
+                    margin-top: 2px;
+                }*/
+
+    }
+
+    .v-widget.mytoken.tokenfield {
+        .v-button-link {
+            //background-color: #e0f7fa ;
+            background-color: white;
+            //border-radius: 2px;
+            //height: 37px;
+            //padding: 4px 7px;
+            text-decoration: none;
+            &:focus {
+                //background-color: #e0f7fa ;
+                background-color: white;
+                //border-radius: 2px;
+                //height: 23px;
+                //padding: 4px 7px;
+                text-decoration: none;
+            }
+        }
+        .v-button-emphasize {
+            background-color: #ec0c6d;
+            &:focus {
+                background-color: #ec0c6d;
+            }
+        }
+        .v-button-link .v-button-caption {
+            //color: #8c8c8c;
+            color: #197de1;
+            text-decoration: none;
+        }
+    }
+
+    .tokentextfield .v-filterselect {
+        background: #ddd none repeat scroll 0 0;
+        border-radius: 4px;
+        margin-bottom: 1px;
+        .v-filterselect-input {
+            background: white none repeat scroll 0 0;
+            border: 1px solid white;
+            box-shadow: 0 1px 0 white inset, 0 1px 0 rgba(255, 255, 255, 0.1);
+            &:focus {
+                //border-color: #197de1;
+                box-shadow: none;
+            }
+        }
+        .v-filterselect-button {
+            display: none;
+        }
+    }
+
+    .v-widget.mytoken.tokenfield .v-csslayout {
+        div {
+            float: left;
+        }
+        .v-button-link {
+            margin: 0 1px 1px 0;
+            height: 37px;
+        }
     }
 
 }

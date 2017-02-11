@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package com.vaadin.demo.dashboard.domain;
+package com.vaadin.demo.dashboard.entity;
 
 import java.io.Serializable;
 import javax.persistence.Basic;
@@ -27,9 +27,9 @@ import javax.xml.bind.annotation.XmlRootElement;
 @Entity
 @Table(name = "usuarios")
 @XmlRootElement
-@NamedQueries({
-    @NamedQuery(name = "Usuarios.findAll", query = "SELECT u FROM Usuarios u")})
+@NamedQueries({@NamedQuery(name = "Usuarios.findAll", query = "SELECT u FROM Usuarios u")})
 public class Usuarios implements Serializable {
+    
     private static final long serialVersionUID = 1L;
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

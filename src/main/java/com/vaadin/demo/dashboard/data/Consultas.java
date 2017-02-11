@@ -5,7 +5,7 @@
  */
 package com.vaadin.demo.dashboard.data;
 
-import com.vaadin.demo.dashboard.domain.Usuarios;
+import com.vaadin.demo.dashboard.entity.Usuarios;
 import java.util.ArrayList;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;

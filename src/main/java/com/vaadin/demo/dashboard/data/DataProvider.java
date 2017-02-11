@@ -8,7 +8,7 @@ import com.vaadin.demo.dashboard.domain.Movie;
 import com.vaadin.demo.dashboard.domain.MovieRevenue;
 import com.vaadin.demo.dashboard.domain.Transaction;
 import com.vaadin.demo.dashboard.domain.User;
-import com.vaadin.demo.dashboard.domain.Usuarios;
+import com.vaadin.demo.dashboard.entity.Usuarios;
 
 /**
  * QuickTickets Dashboard backend API.

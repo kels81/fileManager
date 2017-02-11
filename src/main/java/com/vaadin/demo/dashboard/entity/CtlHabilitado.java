@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package com.vaadin.demo.dashboard.domain;
+package com.vaadin.demo.dashboard.entity;
 
 import java.io.Serializable;
 import javax.persistence.Basic;

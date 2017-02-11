@@ -7,7 +7,7 @@ import com.vaadin.demo.dashboard.DashboardUI;
 import com.vaadin.demo.dashboard.component.ProfilePreferencesWindow;
 import com.vaadin.demo.dashboard.domain.Transaction;
 import com.vaadin.demo.dashboard.domain.User;
-import com.vaadin.demo.dashboard.domain.Usuarios;
+import com.vaadin.demo.dashboard.entity.Usuarios;
 import com.vaadin.demo.dashboard.event.DashboardEvent.NotificationsCountUpdatedEvent;
 import com.vaadin.demo.dashboard.event.DashboardEvent.PostViewChangeEvent;
 import com.vaadin.demo.dashboard.event.DashboardEvent.ProfileUpdatedEvent;

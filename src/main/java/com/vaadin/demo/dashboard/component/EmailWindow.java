@@ -5,18 +5,14 @@
  */
 package com.vaadin.demo.dashboard.component;
 
-import com.google.common.eventbus.Subscribe;
 import com.vaadin.data.Container;
 import com.vaadin.data.Item;
 import com.vaadin.data.util.HierarchicalContainer;
-import com.vaadin.data.validator.EmailValidator;
-import com.vaadin.demo.dashboard.event.DashboardEvent;
 import com.vaadin.demo.dashboard.utils.Components;
 import com.vaadin.demo.dashboard.utils.Mail;
 import com.vaadin.demo.dashboard.utils.Notifications;
 import com.vaadin.event.Action;
 import com.vaadin.server.FontAwesome;
-import com.vaadin.server.Page;
 import com.vaadin.server.Responsive;
 import com.vaadin.server.ThemeResource;
 import com.vaadin.shared.ui.MarginInfo;
@@ -24,14 +20,12 @@ import com.vaadin.shared.ui.label.ContentMode;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Component;
+import com.vaadin.ui.CssLayout;
 import com.vaadin.ui.FormLayout;
 import com.vaadin.ui.HorizontalLayout;
-import com.vaadin.ui.Image;
 import com.vaadin.ui.Label;
-import com.vaadin.ui.Notification;
 import com.vaadin.ui.RichTextArea;
 import com.vaadin.ui.TabSheet;
-import com.vaadin.ui.TextArea;
 import com.vaadin.ui.TextField;
 import com.vaadin.ui.Tree;
 import com.vaadin.ui.UI;
@@ -53,18 +47,17 @@ public class EmailWindow extends Window {
     private final VerticalLayout content;
     private VerticalLayout filesAttached;
     private VerticalLayout root;
-    public HorizontalLayout adjuntar;
-    private FormLayout form;
+    public HorizontalLayout hl;
+    public CssLayout adjuntar;
+    public FormLayout form;
     private Tree tree;
     private final TabSheet detailsWrapper;
-    private Components comp = new Components();
+    private final Components comp = new Components();
 
     private Button btnAdjuntar;
     private Button cancelar;
     private Button enviar;
-    private TextField paraTxt;
-    //private TokenField paraTxt;
-    //private TextField ccTxt;
+    private AddressEditor paraTxt;
     private TextField asuntoTxt;
     private RichTextArea cuerpoCorreo;
     private final Notifications notification = new Notifications();
@@ -104,11 +97,12 @@ public class EmailWindow extends Window {
         root.setSpacing(true);
         root.setMargin(new MarginInfo(true, false, true, false));
 
-        adjuntar = new HorizontalLayout();
-        adjuntar.setSpacing(true);
-        //adjuntar.setSizeUndefined();
-        adjuntar.addStyleName("attachedfiles");
-        Responsive.makeResponsive(adjuntar);
+        hl = new HorizontalLayout();
+        hl.setSpacing(true);
+        hl.setWidth(100.0f, Unit.PERCENTAGE);
+
+        adjuntar = new CssLayout();
+        //adjuntar.setStyleName("attachedfiles");
 
         filesAttached = new VerticalLayout();
         filesAttached.setVisible(false);
@@ -126,19 +120,14 @@ public class EmailWindow extends Window {
                 w.focus();
             }
         });
-        adjuntar.addComponent(btnAdjuntar);
-        adjuntar.setComponentAlignment(btnAdjuntar, Alignment.MIDDLE_LEFT);
 
-        form = new FormLayout();
-        form.setMargin(false);
-        form.setWidth(100.0f, Unit.PERCENTAGE);
+        hl.addComponents(btnAdjuntar, adjuntar);
+        hl.setExpandRatio(adjuntar, 1);
 
-        paraTxt = new TextField("Para");
+        paraTxt = new AddressEditor();
+        paraTxt.setCaption("Para");
         paraTxt.setWidth(100.0f, Unit.PERCENTAGE);
-        paraTxt.setValidationVisible(true);
-        paraTxt.setRequired(true);
-        EmailValidator ev = new EmailValidator("Debe ingresar un email valido");
-        paraTxt.addValidator(ev);
+
 //        paraTxt.addTextChangeListener(new FieldEvents.TextChangeListener() {
 //            @Override
 //            public void textChange(FieldEvents.TextChangeEvent event) {
@@ -148,9 +137,6 @@ public class EmailWindow extends Window {
 //                }
 //            }
 //        });
-
-        //ccTxt = new TextField("Cc");
-        //ccTxt.setWidth(100.0f, Unit.PERCENTAGE);
         asuntoTxt = new TextField("Asunto");
         asuntoTxt.setWidth(100.0f, Unit.PERCENTAGE);
 
@@ -158,12 +144,12 @@ public class EmailWindow extends Window {
         cuerpoCorreo.setHeight(100.0f, Unit.PERCENTAGE);
         cuerpoCorreo.setWidth(100.0f, Unit.PERCENTAGE);
 
-        form.addComponents(paraTxt,
-                //ccTxt,
-                asuntoTxt);
+        form = new FormLayout();
+        form.addStyleName(ValoTheme.FORMLAYOUT_LIGHT);
+        form.addComponents(paraTxt, asuntoTxt);
 
         root.addComponent(form);
-        root.addComponent(adjuntar);
+        root.addComponent(hl);
         root.addComponent(filesAttached);
         root.addComponent(cuerpoCorreo);
 
@@ -189,7 +175,9 @@ public class EmailWindow extends Window {
         enviar.addClickListener(new Button.ClickListener() {
             @Override
             public void buttonClick(Button.ClickEvent event) {
-                boolean enviar = (StringUtils.isNotBlank(paraTxt.getValue()) && StringUtils.isNotBlank(asuntoTxt.getValue()) && StringUtils.isNotBlank(cuerpoCorreo.getValue()));
+                System.out.println("para: " + paraTxt.getValue());
+                //boolean enviar = (StringUtils.isNotBlank(paraTxt.getValue()) && StringUtils.isNotBlank(asuntoTxt.getValue()) && StringUtils.isNotBlank(cuerpoCorreo.getValue()));
+                boolean enviar = (StringUtils.isNotBlank(paraTxt.getValue().toString()) && StringUtils.isNotBlank(asuntoTxt.getValue()) && StringUtils.isNotBlank(cuerpoCorreo.getValue()));
                 if (enviar) {
                     Mail sendMail = new Mail();
 
@@ -198,8 +186,9 @@ public class EmailWindow extends Window {
                     //List<String> receptores = new ArrayList<String>();
                     //receptores.add(paraTxt.getValue());
 
-                    String receptores = paraTxt.getValue();
-                    //String receptores = paraTxt.getInputPrompt();
+                    //String receptores = paraTxt.getValue();
+                    String receptores = paraTxt.getValue().toString();
+                    System.out.println("receptores = " + receptores);
 
                     List<String> adjuntos = new ArrayList<>();
                     for (int i = 0; i < filesAttached.getComponentCount(); i++) {
@@ -207,7 +196,7 @@ public class EmailWindow extends Window {
                         adjuntos.add(filesAttached.getComponent(i).getCaption());
                     }
 
-                    boolean envio = sendMail.enviar(asunto, receptores, mensaje, adjuntos);
+                    boolean envio = sendMail.enviarSpring(asunto, receptores, mensaje, adjuntos);
                     System.out.println("envio = " + envio);
                     if (envio) {
                         notification.createSuccess("Se envio con éxito");
@@ -301,7 +290,7 @@ public class EmailWindow extends Window {
                     //nameFile.setSizeUndefined();
 
                     Button delete = new Button("×");
-                    delete.setDescription("Delete draft");
+                    delete.setDescription("Eliminar");
                     delete.setPrimaryStyleName("deleteBtn");
                     delete.addClickListener(new Button.ClickListener() {
                         @Override

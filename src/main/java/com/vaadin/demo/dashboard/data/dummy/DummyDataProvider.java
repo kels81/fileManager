@@ -40,7 +40,7 @@ import com.vaadin.demo.dashboard.domain.DashboardNotification;
 import com.vaadin.demo.dashboard.domain.Movie;
 import com.vaadin.demo.dashboard.domain.MovieRevenue;
 import com.vaadin.demo.dashboard.domain.Transaction;
-import com.vaadin.demo.dashboard.domain.Usuarios;
+import com.vaadin.demo.dashboard.entity.Usuarios;
 import com.vaadin.demo.dashboard.utils.Notifications;
 import com.vaadin.server.VaadinRequest;
 import com.vaadin.util.CurrentInstance;
