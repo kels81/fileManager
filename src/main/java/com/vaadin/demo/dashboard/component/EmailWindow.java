@@ -196,7 +196,8 @@ public class EmailWindow extends Window {
                         adjuntos.add(filesAttached.getComponent(i).getCaption());
                     }
 
-                    boolean envio = sendMail.enviarSpring(asunto, receptores, mensaje, adjuntos);
+                    //boolean envio = sendMail.enviarSpring(asunto, receptores, mensaje, adjuntos);
+                    boolean envio = sendMail.enviar(asunto, receptores, mensaje, adjuntos);
                     System.out.println("envio = " + envio);
                     if (envio) {
                         notification.createSuccess("Se envio con éxito");
