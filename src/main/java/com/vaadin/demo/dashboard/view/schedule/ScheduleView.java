@@ -3,10 +3,13 @@ package com.vaadin.demo.dashboard.view.schedule;
 import com.vaadin.addon.contextmenu.MenuItem;
 import com.vaadin.addon.contextmenu.ContextMenu;
 import com.vaadin.addon.contextmenu.Menu;
+import com.vaadin.data.Container;
+import com.vaadin.data.util.HierarchicalContainer;
 import com.vaadin.demo.dashboard.component.EmailWindow;
 import com.vaadin.demo.dashboard.utils.Components;
 import com.vaadin.demo.dashboard.utils.Notifications;
 import com.vaadin.event.FieldEvents;
+import com.vaadin.event.ItemClickEvent;
 import com.vaadin.event.LayoutEvents.LayoutClickEvent;
 import com.vaadin.event.ShortcutAction;
 import com.vaadin.navigator.View;
@@ -35,6 +38,7 @@ import com.vaadin.ui.Panel;
 import com.vaadin.ui.ProgressBar;
 import com.vaadin.ui.TabSheet;
 import com.vaadin.ui.TextField;
+import com.vaadin.ui.Tree;
 import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.Window;
@@ -49,7 +53,6 @@ import org.apache.commons.lang3.StringUtils;
 import pl.exsio.plupload.Plupload;
 import pl.exsio.plupload.PluploadError;
 import pl.exsio.plupload.PluploadFile;
-import pl.exsio.plupload.helper.filter.PluploadFilter;
 
 @SuppressWarnings("serial")
 public final class ScheduleView extends Panel implements View {
@@ -68,6 +71,7 @@ public final class ScheduleView extends Panel implements View {
     private Button create;
     private Button save;
     private Button cancel;
+    private Tree tree;
     private final ProgressBar progressBar = new ProgressBar(0.0f);
     private final Notifications notification = new Notifications();
 
@@ -453,7 +457,7 @@ public final class ScheduleView extends Panel implements View {
 
         /*[ NAMEFOLDER ]*/
         VerticalLayout body = new VerticalLayout();
-        body.setCaption("Editar");
+        body.setCaption("Renombrar");
         body.setSizeFull();
         body.setSpacing(true);
         body.setMargin(true);
@@ -461,6 +465,7 @@ public final class ScheduleView extends Panel implements View {
         TextField editNameTxt = new TextField();
         editNameTxt.focus();
         editNameTxt.setWidth(100.0f, Sizeable.Unit.PERCENTAGE);
+        editNameTxt.setValue(FilenameUtils.getBaseName(file.getName()));    //Para mostrar solamente el nombre del archivo sin la extensión
         editNameTxt.setInputPrompt("Nuevo nombre del archivo");
         editNameTxt.setTextChangeEventMode(AbstractTextField.TextChangeEventMode.EAGER);          //EAGER, Para que evento no sea lento
         editNameTxt.setTextChangeTimeout(200);
@@ -620,7 +625,7 @@ public final class ScheduleView extends Panel implements View {
     }
 
     private void fillMenu(ContextMenu menu, File file) {
-        MenuItem editar = menu.addItem("Editar", e -> {
+        MenuItem editar = menu.addItem("Renombrar", e -> {
             Window w = createWindowEdit(file);
             UI.getCurrent().addWindow(w);
             w.focus();
@@ -642,9 +647,10 @@ public final class ScheduleView extends Panel implements View {
             ((ContextMenu) menu).addSeparator();
         }
 
-        MenuItem item3 = menu.addItem("Invisible", e -> {
+        MenuItem moverCopiar = menu.addItem("Mover o Copiar", e -> {
             Notification.show("invisible");
         });
+        moverCopiar.setIcon(FontAwesome.COPY);
 
 //        MenuItem item6 = menu.addItem("Submenu", e -> {
 //        });
@@ -735,5 +741,5 @@ public final class ScheduleView extends Panel implements View {
 
         return window;
     }
-
+    
 }

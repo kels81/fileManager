@@ -6,10 +6,10 @@
 package com.vaadin.demo.dashboard.component;
 
 import com.vaadin.data.Container;
-import com.vaadin.data.Validator.EmptyValueException;
 import com.vaadin.data.Validator.InvalidValueException;
 import com.vaadin.data.fieldgroup.BeanFieldGroup;
 import com.vaadin.data.fieldgroup.PropertyId;
+import com.vaadin.data.util.BeanItemContainer;
 import com.vaadin.data.validator.EmailValidator;
 import com.vaadin.data.validator.StringLengthValidator;
 import com.vaadin.demo.dashboard.control.ControlTransactions;
@@ -25,7 +25,6 @@ import com.vaadin.ui.Button;
 import com.vaadin.ui.CssLayout;
 import com.vaadin.ui.FormLayout;
 import com.vaadin.ui.HorizontalLayout;
-import com.vaadin.ui.Notification;
 import com.vaadin.ui.TabSheet;
 import com.vaadin.ui.TextField;
 import com.vaadin.ui.VerticalLayout;
@@ -67,7 +66,9 @@ public class AddressEditor extends CssLayout implements LayoutClickListener {
 //                    }
 //                }
                 System.out.println("entra aqui");
-                Contactos con = tokenId instanceof Contactos ? (Contactos) tokenId : new Querys().existContacto(tokenId.toString().trim());
+                Contactos con = tokenId instanceof Contactos
+                        ? (Contactos) tokenId
+                        : new Querys().existContacto(tokenId.toString().trim());
 
                 if (!cb.containsId(con)) {
                     getUI().addWindow(new EditContactWindow(tokenId.toString().trim(), this));
@@ -110,9 +111,12 @@ public class AddressEditor extends CssLayout implements LayoutClickListener {
     public List<String> getValue() {
         List<String> values = new ArrayList<>();
         Set<Contactos> contact = (LinkedHashSet) tokenField.getValue();
-        for (Contactos con : contact) {
-            values.add(con.getcEmail());
+        if (contact != null) {
+            for (Contactos con : contact) {
+                values.add(con.getcEmail());
+            }
         }
+
         return values;
     }
 
@@ -218,7 +222,10 @@ public class AddressEditor extends CssLayout implements LayoutClickListener {
 //                            nameTxt.validate(); 
 
                             contact.setcNombre(nameTxt.getValue());
-                            //new ControlTransactions().commit(contact);
+                            new ControlTransactions().commit(contact);
+                            //ESTA LINEA ES PARA AGREGAR AL CONTENEDOR EL NUEVO CONTACTO Y APAREZCA EN LAS OPCIONES
+                            ((BeanItemContainer) tokenField.getContainerDataSource()).addBean(contact);
+
                             tokenField.addToken(contact);
                             tokenField.getUI().removeWindow(EditContactWindow.this);
 

@@ -44,18 +44,10 @@ public class Mail {
     //public boolean enviar(String asunto, List<String> receptores, String mensaje, List<String> adjuntos) {
     public boolean enviar(String asunto, String receptores, String mensaje, List<String> adjuntos) {
         try {
-            
+
             Properties properties = new Properties();
-            // [HOTMAIL]
-//            props.setProperty("mail.smtp.host", "smtp.live.com");
-//            props.setProperty("mail.smtp.starttls.enable", "true");
-//            props.setProperty("mail.smtp.port", "25");
-//            props.setProperty("mail.smtp.user", "mamaardilla@hotmail.com");
-//            props.setProperty("mail.smtp.auth", "true");
-            
             properties.load(Mail.class.getResourceAsStream("mail.properties"));
-            
-            
+
             String username = properties.getProperty("mail.smtp.username");
             String password = properties.getProperty("mail.smtp.password");
             String host = properties.getProperty("mail.smtp.host");
@@ -139,23 +131,23 @@ public class Mail {
         }
     }
 
+    /**
+     * Mejor método para enviar correos electrónicos.
+     *
+     * @param asunto
+     * @param receptores
+     * @param mensaje
+     * @param adjuntos
+     * @return
+     */
     public boolean enviarSpring(String asunto, String receptores, String mensaje, List<String> adjuntos) {
         try {
 
             JavaMailSenderImpl mailSender = new JavaMailSenderImpl();
 
-            
             Properties properties = new Properties();
-//            // [HOTMAIL]
-//                properties.setProperty("mail.smtp.host", "smtp.live.com");
-//            properties.setProperty("mail.smtp.port", "25");
-//            properties.setProperty("mail.smtp.starttls.enable", "true");
-//            properties.setProperty("mail.smtp.user", "mamaardilla@hotmail.com");
-//            properties.setProperty("mail.smtp.password", "Cyb3rs1x");
-//            properties.put("mail.smtp.auth", "true");
             properties.load(Mail.class.getResourceAsStream("mail.properties"));
-            
-            
+
             String username = properties.getProperty("mail.smtp.username");
             String password = properties.getProperty("mail.smtp.password");
 
@@ -178,7 +170,6 @@ public class Mail {
                 }
             }
 
-            
             //Se define quién es el emisor del e-mail
             helper.setFrom(username);
 
