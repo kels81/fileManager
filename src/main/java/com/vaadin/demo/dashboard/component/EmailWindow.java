@@ -8,8 +8,6 @@ package com.vaadin.demo.dashboard.component;
 //import com.vaadin.addon.contextmenu.ContextMenu;
 //import com.vaadin.addon.contextmenu.MenuItem;
 //import com.vaadin.addon.contextmenu.Menu;
-import com.vaadin.addon.contextmenu.ContextMenu;
-import com.vaadin.addon.contextmenu.MenuItem;
 import com.vaadin.data.Container;
 import com.vaadin.data.Item;
 import com.vaadin.data.util.HierarchicalContainer;
@@ -38,6 +36,7 @@ import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.Window;
 import com.vaadin.ui.themes.ValoTheme;
 import java.io.File;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import org.apache.commons.lang3.StringUtils;
@@ -57,11 +56,12 @@ public class EmailWindow extends Window {
     public FormLayout form;
     private Tree tree;
     private final TabSheet detailsWrapper;
+    private HierarchicalContainer container;
     private final Components comp = new Components();
 
     private Button btnAdjuntar;
-    private Button cancelar;
-    private Button enviar;
+    private Button btnCancelar;
+    private Button btnEnviar;
     private AddressEditor paraTxt;
     private TextField asuntoTxt;
     private RichTextArea cuerpoCorreo;
@@ -92,7 +92,7 @@ public class EmailWindow extends Window {
         content.addComponent(detailsWrapper);
         content.setExpandRatio(detailsWrapper, 1f);
         content.addComponent(buildFooter());
-        
+
         setContent(content);
     }
 
@@ -120,9 +120,9 @@ public class EmailWindow extends Window {
         btnAdjuntar.addClickListener(new Button.ClickListener() {
             @Override
             public void buttonClick(Button.ClickEvent event) {
-                DirectoryTreeWindow emailWdw = new DirectoryTreeWindow();
-                //Window w = emailWdw;
-                Window w = createWindow();
+                DirectoryTreeWindow2 directoryTreeWindow = new DirectoryTreeWindow2();
+                Window w = directoryTreeWindow;
+                //Window w = createWindow();
                 UI.getCurrent().addWindow(w);
                 w.focus();
             }
@@ -159,7 +159,8 @@ public class EmailWindow extends Window {
         root.addComponent(hl);
         root.addComponent(filesAttached);
         root.addComponent(cuerpoCorreo);
-//Page.getCurrent().getStyles().add(".v-horizontallayout {border: 1px solid blue;} .v-horizontallayout .v-slot {border: 1px solid red;}");
+
+        //Page.getCurrent().getStyles().add(".v-verticallayout {border: 1px solid blue;} .v-verticallayout .v-slot {border: 1px solid red;}");
         return root;
     }
 
@@ -169,17 +170,17 @@ public class EmailWindow extends Window {
         footer.addStyleName(ValoTheme.WINDOW_BOTTOM_TOOLBAR);
         footer.setWidth(100.0f, Unit.PERCENTAGE);
 
-        cancelar = new Button("Cancelar");
-        cancelar.addClickListener(new Button.ClickListener() {
+        btnCancelar = new Button("Cancelar");
+        btnCancelar.addClickListener(new Button.ClickListener() {
             @Override
             public void buttonClick(Button.ClickEvent event) {
                 close();
             }
         });
 
-        enviar = new Button("Enviar");
-        enviar.addStyleName(ValoTheme.BUTTON_PRIMARY);
-        enviar.addClickListener(new Button.ClickListener() {
+        btnEnviar = new Button("Enviar");
+        btnEnviar.addStyleName(ValoTheme.BUTTON_PRIMARY);
+        btnEnviar.addClickListener(new Button.ClickListener() {
             @Override
             public void buttonClick(Button.ClickEvent event) {
                 //System.out.println("para: " + paraTxt.getValue());
@@ -212,388 +213,506 @@ public class EmailWindow extends Window {
                 } else {
                     notification.createFailure("Favor de revisar los campos");
                 }
-
             }
         });
 
-        footer.addComponents(cancelar, enviar);
-        footer.setExpandRatio(cancelar, 1.0f);
-        footer.setComponentAlignment(cancelar, Alignment.TOP_RIGHT);
+        footer.addComponents(btnCancelar, btnEnviar);
+        footer.setExpandRatio(btnCancelar, 1.0f);
+        footer.setComponentAlignment(btnCancelar, Alignment.TOP_RIGHT);
         return footer;
     }
 
-    private Window createWindow() {
-        Window window = new Window();
-        Responsive.makeResponsive(this);
+//    private Window createWindow() {
+//        Window window = new Window();
+//        Responsive.makeResponsive(this);
+//
+//        window.addStyleName("directorywindow");
+//        window.setModal(true);
+//        window.setResizable(false);
+//        window.setClosable(true);
+//        window.center();
+//
+//        window.setHeight(90.0f, Unit.PERCENTAGE);
+//
+//        VerticalLayout content = new VerticalLayout();
+//        content.setSizeFull();
+//        content.setMargin(true);
+//
+//        TabSheet detailsWrapper = new TabSheet();
+//        detailsWrapper.setSizeFull();
+//        detailsWrapper.addStyleName(ValoTheme.TABSHEET_PADDED_TABBAR);
+//        detailsWrapper.addComponent(tree());
+//
+//        content.addComponent(detailsWrapper);
+//        content.setExpandRatio(detailsWrapper, 1f);
+//        content.addComponent(buildFooterWindow());
+//
+//        window.setContent(content);
+//
+//        return window;
+//    }
 
-        window.addStyleName("directorywindow");
-        Responsive.makeResponsive(this);
-        window.setModal(true);
-        window.setResizable(false);
-        window.setClosable(true);
-        window.center();
-
-        window.setHeight(90.0f, Unit.PERCENTAGE);
-
-        VerticalLayout content = new VerticalLayout();
-        content.setSizeFull();
-        content.setMargin(true);
-
-        TabSheet detailsWrapper = new TabSheet();
-        detailsWrapper.setSizeFull();
-        detailsWrapper.addStyleName(ValoTheme.TABSHEET_PADDED_TABBAR);
-        detailsWrapper.addComponent(tree());
-
-        content.addComponent(detailsWrapper);
-        content.setExpandRatio(detailsWrapper, 1f);
-        content.addComponent(buildFooter2());
-
-        window.setContent(content);
-
-        return window;
-    }
-
-    private HorizontalLayout tree() {
-        HorizontalLayout root = new HorizontalLayout();
-        root.setCaption("Archivos");
-        root.setMargin(true);
-
-        tree = new Tree();
-        Container generateContainer = getHardwareContainer(origenPath);
-        tree.setContainerDataSource(generateContainer);
-        tree.setItemCaptionPropertyId("caption");
-        tree.setItemIconPropertyId("icon");
-        tree.setImmediate(true);
-        tree.setSelectable(false);
-        //tree.addActionHandler(actionHandler);
-        //tree.addActionHandler(new Action.Handler() { //VA EL CODIGO QUE TIENE EL actionHandler});
-        tree.addExpandListener(getTreeExpandListener());
-//        tree.addExpandListener(new Tree.ExpandListener() {
+//    private HorizontalLayout tree() {
+//        HorizontalLayout root = new HorizontalLayout();
+//        root.setCaption("Archivos");
+//        root.setMargin(true);
+//
+//        Container generateContainer = getDirectoryContainer(origenPath);
+//        tree = new Tree();
+//        tree.setId("idTreeDirectory");
+//        tree.setContainerDataSource(generateContainer);
+//        tree.setItemCaptionPropertyId("caption");
+//        tree.setItemIconPropertyId("icon");
+//        tree.setImmediate(true);
+//        tree.setSelectable(false);
+//        //tree.addActionHandler(actionHandler);
+//        //tree.addActionHandler(new Action.Handler() { //VA EL CODIGO QUE TIENE EL actionHandler});
+//        tree.addExpandListener(getTreeExpandListener());
+//        tree.addCollapseListener(new Tree.CollapseListener() {
 //            @Override
-//            public void nodeExpand(Tree.ExpandEvent event) {
-//
-//                //List<File> files = (List<File>) directoryContents(new File(event.getItemId().toString()));
-//                List<File> files = (List<File>) comp.directoryContents(new File(event.getItemId().toString()));
-//
-//                for (File file : files) {
-//                    if (file.isDirectory()) {
-//                        tree.addItem(file);
-//                        tree.getItem(file).getItemProperty("caption").setValue(file.getName());
-//                        tree.getItem(file).getItemProperty("icon").setValue(new ThemeResource("img/file_manager/folder_24.png"));
-//                        tree.getItem(file).getItemProperty("path").setValue(file.getAbsolutePath());
-//                        tree.getItem(file).getItemProperty("type").setValue("directory");
-//                        tree.setParent(file, event.getItemId());
-//                        // SI SE ENCUENTRA VACIO LA CARPETA NO MOSTRARA LA FLECHA DE EXPANDIR
-//                        if (file.list().length == 0) {
-//                            tree.setChildrenAllowed(file, false);
-//                        }
-//
-//                    } else if (file.isFile()) {
-//                        tree.addItem(file);
-//                        tree.getItem(file).getItemProperty("caption").setValue(file.getName());
-//                        tree.getItem(file).getItemProperty("icon").setValue(new ThemeResource("img/file_manager/file_24.png"));
-//                        tree.getItem(file).getItemProperty("path").setValue(file.getAbsolutePath());
-//                        tree.getItem(file).getItemProperty("type").setValue("file");
-//                        tree.setParent(file, event.getItemId());
-//                        tree.setChildrenAllowed(file, false);
+//            public void nodeCollapse(Tree.CollapseEvent event) {
+//                // Remove all children of the collapsing node
+//                Object children[] = tree.getChildren(event.getItemId()).toArray();
+//                for (Object childrenItem : children) {
+//                    tree.collapseItemsRecursively(childrenItem);
+//                    //tree.collapseItem(childrenItem);
+//                }
+//            }
+//        });
+//        //ESTE METODO SIRVE CUANDO SELECCIONAS UN ITEM CON EL BUTTON_RIGHT DEL MOUSE
+//        tree.addItemClickListener(new ItemClickEvent.ItemClickListener() {
+//            @Override
+//            public void itemClick(ItemClickEvent event) {
+//                Object itemId = event.getItemId();
+//                if (event.getItem().getItemProperty("type").getValue().equals("file")) {
+//                    tree.select(event.getItemId());
+//                }
+//                //VALIDACION PARA EXPANDIR NODO DESDE EL LABEL
+//                if (event.isDoubleClick()) {
+//                    //Notification.show("789797_"+event.getItem().getItemProperty("caption").getValue());
+//                    if (tree.isExpanded(itemId)) {
+//                        tree.collapseItem(itemId);
+//                    } else {
+//                        tree.expandItem(itemId);
 //                    }
 //                }
+//            }
+//        });
+//        //ESTE METODO SIRVE CUANDO SELECCIONAS UN ITEM CON EL BUTTON_LEFT DEL MOUSE
+////        tree.addValueChangeListener(new Property.ValueChangeListener() {
+////            @Override
+////            public void valueChange(Property.ValueChangeEvent event) {
+////                Notification.show("789797_"+event.getProperty().getValue().toString());
+////            }
+////        });
 //
+//        ContextMenu contextMenu = new ContextMenu(this, false);
+//        fillMenu(contextMenu);
+//        contextMenu.setAsContextMenuOf(tree);
+//
+//        root.addComponent(tree);
+//
+//        return root;
+//    }
+
+//    private void fillMenu(ContextMenu menu) {
+//        MenuItem addFile = menu.addItem("Adjuntar", e -> {
+//            //Notification.show("checked: " + e.isChecked());
+//            Item item = tree.getItem(tree.getValue());
+//            //VALIDACION PARA ADJUNTAR SOLAMENTE ARCHIVOS NO CARPETAS
+//            if (item.getItemProperty("type").getValue().equals("file")) {
+//                buildAttachedFile(item);
+//            } else {
+//                notification.createFailure("No se pueden adjuntar carpetas.");  //PARA QUE SE VEA ESTE MENSAJE, SETSELECTABLE = TRUE
 //            }
 //        });
-        tree.addCollapseListener(new Tree.CollapseListener() {
-            @Override
-            public void nodeCollapse(Tree.CollapseEvent event) {
-                // Remove all children of the collapsing node
-                Object children[] = tree.getChildren(event.getItemId()).toArray();
-                for (Object children1 : children) {
-                    tree.collapseItemsRecursively(children1);
-                    //tree.collapseItem(children1);
-                }
-            }
-        });
-        //ESTE METODO SIRVE CUANDO SELECCIONAS UN ITEM CON EL BUTTON_RIGHT DEL MOUSE
-        tree.addItemClickListener(new ItemClickEvent.ItemClickListener() {
-            @Override
-            public void itemClick(ItemClickEvent event) {
-                Object itemId = event.getItemId();
-                if (event.getItem().getItemProperty("type").getValue().equals("file")) {
-                    tree.select(event.getItemId());
-                }
-                //VALIDACION PARA EXPANDIR NODE DESDE EL LABEL
-                if (event.isDoubleClick()) {
-                    //Notification.show("789797_"+event.getItem().getItemProperty("caption").getValue());
-                    if (tree.isExpanded(itemId)) {
-                        tree.collapseItem(itemId);
-                    } else {
-                        tree.expandItem(itemId);
-                    }
-                }
-            }
-        });
-        //ESTE METODO SIRVE CUANDO SELECCIONAS UN ITEM CON EL BUTTON_LEFT DEL MOUSE
-//        tree.addValueChangeListener(new Property.ValueChangeListener() {
+//        addFile.setIcon(FontAwesome.PAPERCLIP);
+//    }
+
+//    private Component buildFooterWindow() {
+//        HorizontalLayout footer = new HorizontalLayout();
+//        footer.addStyleName(ValoTheme.WINDOW_BOTTOM_TOOLBAR);
+//        footer.setWidth(100.0f, Unit.PERCENTAGE);
+//        footer.setHeight(30.0f, Unit.PIXELS);
+//
+//        Button btnCerrar = new Button("Cerrar");
+//        btnCerrar.addStyleName(ValoTheme.BUTTON_PRIMARY);
+//        btnCerrar.addClickListener(new Button.ClickListener() {
 //            @Override
-//            public void valueChange(Property.ValueChangeEvent event) {
-//                Notification.show("789797_"+event.getProperty().getValue().toString());
+//            public void buttonClick(Button.ClickEvent event) {
+//                close();
 //            }
 //        });
+//        //ok.focus();
+//        //footer.addComponent(ok);
+//        //footer.setComponentAlignment(ok, Alignment.TOP_RIGHT);
+//        return footer;
+//    }
 
-        ContextMenu contextMenu = new ContextMenu(this, false);
-        fillMenu(contextMenu);
-        contextMenu.setAsContextMenuOf(tree);
-
-        root.addComponent(tree);
-
-        return root;
-    }
-
-    private void fillMenu(ContextMenu menu) {
-        MenuItem addFile = menu.addItem("Adjuntar", e -> {
-            //Notification.show("checked: " + e.isChecked());
-            Item item = tree.getItem(tree.getValue());
-            //VALIDACION PARA ADJUNTAR SOLAMENTE ARCHIVOS NO CARPETAS
-            if (item.getItemProperty("type").getValue().equals("file")) {
-                String path = tree.getValue().toString();
-                //String path = item.getItemProperty("path").getValue().toString();
-                String name = path.substring(path.lastIndexOf('\\') + 1);
-
-                Label pathFile = new Label();
-                pathFile.setCaption(path);
-
-                HorizontalLayout adjLayout = new HorizontalLayout();
-                adjLayout.addStyleName("attachedlayout");
-
-                Label nameFile = new Label("&nbsp;" + FontAwesome.FILE_TEXT_O.getHtml() + "&nbsp;" + name + "&nbsp;");
-                nameFile.setContentMode(ContentMode.HTML);
-                nameFile.addStyleName(ValoTheme.LABEL_LIGHT);
-                nameFile.addStyleName(ValoTheme.LABEL_SMALL);
-
-                Button delete = new Button("×");
-                delete.setDescription("Eliminar");
-                delete.setPrimaryStyleName("deleteBtn");
-                delete.addClickListener(new Button.ClickListener() {
-                    @Override
-                    public void buttonClick(final Button.ClickEvent event) {
-                        // ELIMINAR LABEL DEL ARCHIVO QUE VE EL USUARIO
-                        adjuntar.removeComponent(adjLayout);
-                        // ELIMINAR TAMBIEN EL PATH DEL ARCHIVO QUE SE ENCUENTRA OCULTO
-                        // EL QUE SE MANDA POR CORREO
-                        filesAttached.removeComponent(pathFile);
-                    }
-                });
-
-                adjLayout.addComponents(nameFile, delete);
-
-                // NOMBRE DE ARCHIVOS QUE VE EL USAURIO
-                adjuntar.addComponent(adjLayout);
-                // LA RUTA DE LOS ARCHIVOS QUE VE EL USUARIO, PERO QUE SE ENCUENTRA OCULTO
-                filesAttached.addComponent(pathFile);
-
-                notification.createSuccess("Se adjunto el archivo: " + name);
-
-//                    List arrayAdjuntos = new ArrayList();
-//                    
-//                    for (int i = 0; i < filesAttached.getComponentCount(); i++) {
-//                        Component c = filesAttached.getComponent(i);
-//                            arrayAdjuntos.add(c);
-//                            System.out.println("c = " + filesAttached.getComponent(i).getCaption());
-//                    }
-            } else {
-                //notification.createFailure("No se pueden adjuntar carpetas.");
-            }
-        });
-        addFile.setIcon(FontAwesome.PAPERCLIP);
-    }
-
-    private Component buildFooter2() {
-        HorizontalLayout footer = new HorizontalLayout();
-        footer.addStyleName(ValoTheme.WINDOW_BOTTOM_TOOLBAR);
-        footer.setWidth(100.0f, Unit.PERCENTAGE);
-        footer.setHeight(30.0f, Unit.PIXELS);
-
-        Button ok = new Button("Cerrar");
-        ok.addStyleName(ValoTheme.BUTTON_PRIMARY);
-        ok.addClickListener(new Button.ClickListener() {
-            @Override
-            public void buttonClick(Button.ClickEvent event) {
-                close();
-            }
-        });
-        //ok.focus();
-        //footer.addComponent(ok);
-        //footer.setComponentAlignment(ok, Alignment.TOP_RIGHT);
-        return footer;
-    }
-
-    public HierarchicalContainer getHardwareContainer(File directory) {
-
-        List<File> files = (List<File>) directoryContents(directory);
-
-        // Create new container
-        HierarchicalContainer container = new HierarchicalContainer();
-        // Create containerproperty for name
-        container.addContainerProperty("icon", ThemeResource.class, null);
-        container.addContainerProperty("caption", String.class, null);
-        container.addContainerProperty("path", String.class, null);
-        container.addContainerProperty("type", String.class, null);
-
-        for (File file : files) {
-
-            if (file.isDirectory()) {
-                container.addItem(file);
-                container.getItem(file).getItemProperty("caption").setValue(file.getName());
-                container.getItem(file).getItemProperty("icon").setValue(new ThemeResource("img/file_manager/folder_24.png"));
-                container.getItem(file).getItemProperty("path").setValue(file.getAbsolutePath());
-                container.getItem(file).getItemProperty("type").setValue("directory");
-                // SI SE ENCUENTRA VACIO LA CARPETA NO MOSTRARA LA FLECHA DE EXPANDIR
-                if (file.list().length == 0) {
-                    container.setChildrenAllowed(file, false);
-                }
-
-            } else if (file.isFile()) {
-                container.addItem(file);
-                container.getItem(file).getItemProperty("caption").setValue(file.getName());
-                container.getItem(file).getItemProperty("icon").setValue(new ThemeResource("img/file_manager/file_24.png"));
-                container.getItem(file).getItemProperty("path").setValue(file.getAbsolutePath());
-                container.getItem(file).getItemProperty("type").setValue("file");
-                //container.setParent(file, file);
-                container.setChildrenAllowed(file, false);
-            }
-        }
-        return container;
-    }
-
-    public List<File> directoryContents(File directory) {
-        // ARRAY QUE VA A ACONTENER TODOS LOS ARCHIVOS ORDENADOS POR TIPO Y ALFABETICAMENTE
-        List<File> allDocsLst = new ArrayList<>();
-        File[] files = directory.listFiles();
-        List<File> fileLst = new ArrayList<>();
-        List<File> directoryLst = new ArrayList<>();
-        for (File file : files) {
-            if (file.isDirectory()) {
-                directoryLst.add(file);
-                //directoryContents(file);   //para conocer los archivos de las subcarpetas
-            } else {
-                fileLst.add(file);
-            }
-        }
-        allDocsLst.addAll(directoryLst);
-        allDocsLst.addAll(fileLst);
-
-        return allDocsLst;
-    }
+//    public HierarchicalContainer getDirectoryContainer(File directory) {
+//
+//        // Create new container
+//        container = new HierarchicalContainer();
+//        // Create containerproperty for name
+//        container.addContainerProperty("icon", ThemeResource.class, null);
+//        container.addContainerProperty("caption", String.class, null);
+//        container.addContainerProperty("path", String.class, null);
+//        container.addContainerProperty("type", String.class, null);
+//
+//        createTreeContent(directory, null);
+//
+//        return container;
+//    }
 
     /*
     * CODIGO PARA USAR EN METODO addActionHandler
      */
-    Action.Handler actionHandler = new Action.Handler() {
-        private final Action ADJUNTAR = new Action(FontAwesome.PAPERCLIP.getHtml()+" Adjuntar");
-        private final Action[] ACTIONS = new Action[]{ADJUNTAR};
+//    Action.Handler actionHandler = new Action.Handler() {
+//        private final Action ADJUNTAR = new Action(FontAwesome.PAPERCLIP.getHtml() + " Adjuntar");
+//        private final Action[] ACTIONS = new Action[]{ADJUNTAR};
+//
+//        @Override
+//        public Action[] getActions(Object target, Object sender) {
+//            return ACTIONS;
+//        }
+//
+//        @Override
+//        public void handleAction(Action action, Object sender, Object target) {
+//            //Notification.show(action.getCaption());
+//            Item item = tree.getItem(target);
+//            //VALIDACION PARA ADJUNTAR SOLAMENTE ARCHIVOS NO CARPETAS
+//            if (action == ADJUNTAR && item.getItemProperty("type").getValue().equals("file")) {
+//                buildAttachedFile(item);
+//            } else {
+//                notification.createFailure("No se pueden adjuntar carpetas.");  //PARA QUE SE VEA ESTE MENSAJE, SETSELECTABLE = TRUE
+//            }
+//        }
+//    };
+//
+//    Action.Handler getActionHandler() {
+//        return actionHandler;
+//    }
+//
+//    /**
+//     * CODIGO PARA USAR EN METODO addExpandListener
+//     */
+//    Tree.ExpandListener treeExpand = new Tree.ExpandListener() {
+//        @Override
+//        public void nodeExpand(Tree.ExpandEvent event) {
+//            createTreeContent(new File(event.getItemId().toString()), event);
+//        }
+//    };
+//
+//    Tree.ExpandListener getTreeExpandListener() {
+//        return treeExpand;
+//    }
+//
+//    private void createTreeContent(File directory, Tree.ExpandEvent event) {
+//
+//        List<File> files = comp.directoryContents(directory);
+//
+//        for (File file : files) {
+//            String source = file.isDirectory() ? "folder" : "file";
+//
+//            container.addItem(file);
+//            container.getItem(file).getItemProperty("caption").setValue(file.getName());
+//            container.getItem(file).getItemProperty("icon").setValue(new ThemeResource("img/file_manager/" + source + "_24.png"));
+//            container.getItem(file).getItemProperty("path").setValue(file.getAbsolutePath());
+//            container.getItem(file).getItemProperty("type").setValue(source);
+//
+//            if (event != null) {
+//                tree.setParent(file, event.getItemId());
+//            }
+//
+//            // SI SE ENCUENTRA VACIA LA CARPETA, NO MOSTRARA LA FLECHA DE EXPANDIR
+//            if (file.isFile() || (file.isDirectory() && file.list().length == 0)) {
+//                container.setChildrenAllowed(file, false);
+//            }
+//        }
+//    }
 
-        @Override
-        public Action[] getActions(Object target, Object sender) {
-            return ACTIONS;
+//    private void buildAttachedFile(Item item) {
+//        String path = item.getItemProperty("path").getValue().toString();
+//        String name = path.substring(path.lastIndexOf('\\') + 1);
+//
+//        HorizontalLayout adjLayout = new HorizontalLayout();
+//        adjLayout.addStyleName("attachedlayout");
+//
+//        Label pathFile = new Label();
+//        pathFile.setCaption(path);
+//
+//        Label nameFile = new Label("&nbsp;" + FontAwesome.FILE_TEXT_O.getHtml() + "&nbsp;" + name + "&nbsp;");
+//        nameFile.setContentMode(ContentMode.HTML);
+//        nameFile.addStyleName(ValoTheme.LABEL_LIGHT);
+//        nameFile.addStyleName(ValoTheme.LABEL_SMALL);
+//
+//        Button delete = new Button("×");
+//        delete.setDescription("Eliminar");
+//        delete.setPrimaryStyleName("deleteBtn");
+//        delete.addClickListener(new Button.ClickListener() {
+//            @Override
+//            public void buttonClick(final Button.ClickEvent event) {
+//                removeAttachedFile(adjLayout, pathFile);
+//            }
+//        });
+//
+//        adjLayout.addComponents(nameFile, delete);
+//
+//        addAttachedFile(adjLayout, pathFile, name);
+//        
+//    }
+
+//    public void addAttachedFile(Component attachedFile, Label pathFile, String name) {
+//        // NOMBRE DE ARCHIVOS QUE VE EL USAURIO
+//        adjuntar.addComponent(attachedFile);
+//        UI.getCurrent().setContent(attachedFile);
+//        Notification.show(adjuntar.getId()+","+adjuntar.getClass());
+//        // LA RUTA DE LOS ARCHIVOS QUE VE EL USUARIO, PERO QUE SE ENCUENTRA OCULTO
+//        filesAttached.addComponent(pathFile);
+//        notification.createSuccess("Se adjunto el archivo: " + name);
+//    }
+
+//    public void removeAttachedFile(Component attachedFile, Label pathFile) {
+//        // ELIMINAR LABEL DEL ARCHIVO QUE VE EL USUARIO
+//        adjuntar.removeComponent(attachedFile);
+//        // ELIMINAR TAMBIEN EL PATH DEL ARCHIVO QUE SE ENCUENTRA OCULTO
+//        // EL QUE SE MANDA POR CORREO
+//        filesAttached.removeComponent(pathFile);
+//    }
+
+    EmailWindowListener listener = null;
+
+    void close(boolean ok) {
+        if (listener != null) {
+            listener.close(ok);
         }
-
-        @Override
-        public void handleAction(Action action, Object sender, Object target) {
-            //Notification.show(action.getCaption());
-            Item item = tree.getItem(target);
-            //VALIDACION PARA ADJUNTAR SOLAMENTE ARCHIVOS NO CARPETAS
-            if (action == ADJUNTAR && item.getItemProperty("type").getValue().equals("file")) {
-
-                String path = item.getItemProperty("path").getValue().toString();
-                String name = path.substring(path.lastIndexOf('\\') + 1);
-
-                Label pathFile = new Label();
-                pathFile.setCaption(path);
-
-                HorizontalLayout adjLayout = new HorizontalLayout();
-                adjLayout.addStyleName("attachedlayout");
-
-                Label nameFile = new Label("&nbsp;" + FontAwesome.FILE_TEXT_O.getHtml() + "&nbsp;" + name + "&nbsp;");
-                nameFile.setContentMode(ContentMode.HTML);
-                nameFile.addStyleName(ValoTheme.LABEL_LIGHT);
-                nameFile.addStyleName(ValoTheme.LABEL_SMALL);
-                //nameFile.setSizeUndefined();
-
-                Button delete = new Button("×");
-                delete.setDescription("Eliminar");
-                delete.setPrimaryStyleName("deleteBtn");
-                delete.addClickListener(new Button.ClickListener() {
-                    @Override
-                    public void buttonClick(final Button.ClickEvent event) {
-                        // ELIMINAR LABEL DEL ARCHIVO QUE VE EL USUARIO
-                        adjuntar.removeComponent(adjLayout);
-                        // ELIMINAR TAMBIEN EL PATH DEL ARCHIVO QUE SE ENCUENTRA OCULTO
-                        // EL QUE SE MANDA POR CORREO
-                        filesAttached.removeComponent(pathFile);
-                    }
-                });
-
-                adjLayout.addComponents(nameFile, delete);
-
-                // NOMBRE DE ARCHIVOS QUE VE EL USAURIO
-                adjuntar.addComponent(adjLayout);
-                // LA RUTA DE LOS ARCHIVOS QUE VE EL USUARIO, PERO QUE SE ENCUENTRA OCULTO
-                filesAttached.addComponent(pathFile);
-
-//                    List arrayAdjuntos = new ArrayList();
-//                    
-//                    for (int i = 0; i < filesAttached.getComponentCount(); i++) {
-//                        Component c = filesAttached.getComponent(i);
-//                            arrayAdjuntos.add(c);
-//                            System.out.println("c = " + filesAttached.getComponent(i).getCaption());
-//                    }
-            }
-        }
-    };
-
-    Action.Handler getActionHandler() {
-        return actionHandler;
     }
 
-    /**
-     * CODIGO PARA USAR EN METODO addExpandListener
-     */
-    Tree.ExpandListener treeExpand = new Tree.ExpandListener() {
-        @Override
-        public void nodeExpand(Tree.ExpandEvent event) {
+    public void setListener(EmailWindowListener listener) {
+        this.listener = listener;
+    }
 
-            //List<File> files = (List<File>) directoryContents(new File(event.getItemId().toString()));
-            List<File> files = (List<File>) comp.directoryContents(new File(event.getItemId().toString()));
+    public interface EmailWindowListener extends Serializable {
+        public void close(boolean ok);
+    }
+
+    public class DirectoryTreeWindow2 extends Window {
+
+        private final File origenPath;
+        private final VerticalLayout content;
+        private HorizontalLayout root;
+        private Tree tree;
+        private final TabSheet detailsWrapper;
+        private HierarchicalContainer container;
+
+        private final Components comp = new Components();
+        private final Notifications notification = new Notifications();
+
+        public DirectoryTreeWindow2() {
+            this.origenPath = new File("C:\\Users\\Edrd\\Documents\\GitHub\\fileManager\\Archivos");
+
+            Responsive.makeResponsive(this);
+
+            addStyleName("directorywindow");
+            setModal(true);
+            setResizable(false);
+            setClosable(true);
+            center();
+
+            setHeight(90.0f, Unit.PERCENTAGE);
+
+            content = new VerticalLayout();
+            content.setSizeFull();
+            content.setMargin(true);
+
+            detailsWrapper = new TabSheet();
+            detailsWrapper.setSizeFull();
+            detailsWrapper.addStyleName(ValoTheme.TABSHEET_PADDED_TABBAR);
+            detailsWrapper.addComponent(tree());
+
+            content.addComponent(detailsWrapper);
+            content.setExpandRatio(detailsWrapper, 1.0f);
+            content.addComponent(buildFooter());
+
+            setContent(content);
+        }
+
+        private HorizontalLayout tree() {
+            root = new HorizontalLayout();
+            root.setCaption("Archivos ");
+            root.setMargin(true);
+
+            Container generateContainer = getDirectoryContainer(origenPath);
+            tree = new Tree();
+            tree.setContainerDataSource(generateContainer);
+            tree.setItemCaptionPropertyId("caption");
+            tree.setItemIconPropertyId("icon");
+            tree.setImmediate(true);
+            tree.setSelectable(false);
+            tree.addActionHandler(new Action.Handler() {
+                private final Action ADJUNTAR = new Action(FontAwesome.PAPERCLIP.getHtml() + " Adjuntar");
+                private final Action[] ACTIONS = new Action[]{ADJUNTAR};
+
+                @Override
+                public Action[] getActions(Object target, Object sender) {
+                    return ACTIONS;
+                }
+
+                @Override
+                public void handleAction(Action action, Object sender, Object target) {
+                    //Notification.show(action.getCaption());
+                    Item item = tree.getItem(target);
+                    //VALIDACION PARA ADJUNTAR SOLAMENTE ARCHIVOS NO CARPETAS
+                    if (action == ADJUNTAR && item.getItemProperty("type").getValue().equals("file")) {
+                        buildAttachedFile(item);
+                    } else {
+                        notification.createFailure("No se pueden adjuntar carpetas.");  //PARA QUE SE VEA ESTE MENSAJE, SETSELECTABLE = TRUE
+                    }
+                }
+            });
+            tree.addExpandListener(new Tree.ExpandListener() {
+                @Override
+                public void nodeExpand(Tree.ExpandEvent event) {
+                    createTreeContent(new File(event.getItemId().toString()), event);
+                }
+            });
+            tree.addCollapseListener(new Tree.CollapseListener() {
+                @Override
+                public void nodeCollapse(Tree.CollapseEvent event) {
+                    // Remove all children of the collapsing node
+                    Object children[] = tree.getChildren(event.getItemId()).toArray();
+                    for (Object childrenItem : children) {
+                        tree.collapseItemsRecursively(childrenItem);
+                        //tree.collapseItem(childrenItem);
+                    }
+                }
+            });
+            tree.addItemClickListener(new ItemClickEvent.ItemClickListener() {
+                @Override
+                public void itemClick(ItemClickEvent event) {
+                    Object itemId = event.getItemId();
+                    if (event.getItem().getItemProperty("type").getValue().equals("file")) {
+                        tree.select(event.getItemId());
+                    }
+                    //VALIDACION PARA EXPANDIR NODE DESDE EL LABEL
+                    if (event.isDoubleClick()) {
+                        //Notification.show("789797_"+event.getItem().getItemProperty("caption").getValue());
+                        if (tree.isExpanded(itemId)) {
+                            tree.collapseItem(itemId);
+                        } else {
+                            tree.expandItem(itemId);
+                        }
+                    }
+                }
+            });
+
+            root.addComponent(tree);
+
+            return root;
+        }
+
+        private Component buildFooter() {
+            HorizontalLayout footer = new HorizontalLayout();
+            footer.addStyleName(ValoTheme.WINDOW_BOTTOM_TOOLBAR);
+            footer.setWidth(100.0f, Unit.PERCENTAGE);
+            footer.setHeight(30.0f, Unit.PIXELS);
+
+            Button btnCerrar = new Button("Cerrar");
+            btnCerrar.addStyleName(ValoTheme.BUTTON_PRIMARY);
+            btnCerrar.addClickListener(new Button.ClickListener() {
+                @Override
+                public void buttonClick(Button.ClickEvent event) {
+                    close();
+                }
+            });
+            //footer.addComponent(btnCerrar);
+            //footer.setComponentAlignment(btnCerrar, Alignment.TOP_RIGHT);
+            return footer;
+        }
+
+        public HierarchicalContainer getDirectoryContainer(File directory) {
+
+            // Create new container
+            container = new HierarchicalContainer();
+            // Create containerproperty for name
+            container.addContainerProperty("icon", ThemeResource.class, null);
+            container.addContainerProperty("caption", String.class, null);
+            container.addContainerProperty("path", String.class, null);
+            container.addContainerProperty("type", String.class, null);
+
+            createTreeContent(directory, null);
+
+            return container;
+        }
+
+        private void createTreeContent(File directory, Tree.ExpandEvent event) {
+
+            List<File> files = comp.directoryContents(directory);
 
             for (File file : files) {
-                if (file.isDirectory()) {
-                    tree.addItem(file);
-                    tree.getItem(file).getItemProperty("caption").setValue(file.getName());
-                    tree.getItem(file).getItemProperty("icon").setValue(new ThemeResource("img/file_manager/folder_24.png"));
-                    tree.getItem(file).getItemProperty("path").setValue(file.getAbsolutePath());
-                    tree.getItem(file).getItemProperty("type").setValue("directory");
-                    tree.setParent(file, event.getItemId());
-                    // SI SE ENCUENTRA VACIO LA CARPETA NO MOSTRARA LA FLECHA DE EXPANDIR
-                    if (file.list().length == 0) {
-                        tree.setChildrenAllowed(file, false);
-                    }
+                String source = file.isDirectory() ? "folder" : "file";
 
-                } else if (file.isFile()) {
-                    tree.addItem(file);
-                    tree.getItem(file).getItemProperty("caption").setValue(file.getName());
-                    tree.getItem(file).getItemProperty("icon").setValue(new ThemeResource("img/file_manager/file_24.png"));
-                    tree.getItem(file).getItemProperty("path").setValue(file.getAbsolutePath());
-                    tree.getItem(file).getItemProperty("type").setValue("file");
+                container.addItem(file);
+                container.getItem(file).getItemProperty("caption").setValue(file.getName());
+                container.getItem(file).getItemProperty("icon").setValue(new ThemeResource("img/file_manager/" + source + "_24.png"));
+                container.getItem(file).getItemProperty("path").setValue(file.getAbsolutePath());
+                container.getItem(file).getItemProperty("type").setValue(source);
+
+                if (event != null) {
                     tree.setParent(file, event.getItemId());
-                    tree.setChildrenAllowed(file, false);
+                }
+                // SI SE ENCUENTRA VACIA LA CARPETA, NO MOSTRARA LA FLECHA DE EXPANDIR
+                if (file.isFile() || (file.isDirectory() && file.list().length == 0)) {
+                    container.setChildrenAllowed(file, false);
                 }
             }
-
         }
-    };
 
-    Tree.ExpandListener getTreeExpandListener() {
-        return treeExpand;
+        private void buildAttachedFile(Item item) {
+            String path = item.getItemProperty("path").getValue().toString();
+            String name = path.substring(path.lastIndexOf('\\') + 1);
+
+            HorizontalLayout adjLayout = new HorizontalLayout();
+            adjLayout.addStyleName("attachedlayout");
+
+            Label pathFile = new Label(path);
+            pathFile.addStyleName(ValoTheme.LABEL_TINY);
+
+            Label nameFile = new Label("&nbsp;" + FontAwesome.FILE_TEXT_O.getHtml() + "&nbsp;" + name + "&nbsp;");
+            nameFile.setContentMode(ContentMode.HTML);
+            nameFile.addStyleName(ValoTheme.LABEL_LIGHT);
+            nameFile.addStyleName(ValoTheme.LABEL_SMALL);
+
+            Button delete = new Button("×");
+            delete.setDescription("Eliminar");
+            delete.setPrimaryStyleName("deleteBtn");
+            delete.addClickListener(new Button.ClickListener() {
+                @Override
+                public void buttonClick(final Button.ClickEvent event) {
+                    removeAttachedFIle(adjLayout, pathFile);
+                }
+            });
+
+            adjLayout.addComponents(nameFile, delete);
+            addAttachedFile(adjLayout, pathFile, name);
+        }
+        
+        private void addAttachedFile(Component attachedFile, Label pathFile, String name) {
+        // NOMBRE DE ARCHIVOS QUE VE EL USAURIO
+        adjuntar.addComponent(attachedFile);
+        // LA RUTA DE LOS ARCHIVOS QUE VE EL USUARIO, PERO QUE SE ENCUENTRA OCULTO
+        filesAttached.addComponent(pathFile);
+        notification.createSuccess("Se adjunto el archivo: " + name);
     }
-;
 
+    private void removeAttachedFIle(Component attachedFile, Label pathFile) {
+        // ELIMINAR LABEL DEL ARCHIVO QUE VE EL USUARIO
+        adjuntar.removeComponent(attachedFile);
+        // ELIMINAR TAMBIEN EL PATH DEL ARCHIVO QUE SE ENCUENTRA OCULTO
+        // EL QUE SE MANDA POR CORREO
+        filesAttached.removeComponent(pathFile);
+    }
+    
+    }
+    
 }

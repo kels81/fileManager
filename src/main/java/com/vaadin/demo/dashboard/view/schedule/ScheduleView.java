@@ -662,7 +662,7 @@ public final class ScheduleView extends Panel implements View {
 
     private Window createWindowConfirm(File file) {
         window = new Window();
-        window.addStyleName("createfolder-window");
+        window.addStyleName("confirm-window");
         Responsive.makeResponsive(this);
 
         window.setModal(true);
@@ -678,24 +678,23 @@ public final class ScheduleView extends Panel implements View {
         detailsWrapper.setSizeFull();
         detailsWrapper.addStyleName(ValoTheme.TABSHEET_PADDED_TABBAR);
         content.addComponent(detailsWrapper);
-        content.setExpandRatio(detailsWrapper, 1f);
+        content.setExpandRatio(detailsWrapper, 1.0f);
 
-        /*[ NAMEFOLDER ]*/
+        /*[ BODY TEXT ]*/
         VerticalLayout body = new VerticalLayout();
         body.setCaption("Confirmar");
         body.setSizeFull();
-        body.setSpacing(true);
+        //body.setSpacing(true);
         body.setMargin(true);
 
-        Label messageLbl = new Label("Se eliminará el archivo");
-        //messageLbl.setCaption("Se eliminará el archivo");
+        Label messageLbl = new Label("¿Está seguro de que desea eliminar este archivo?");
         messageLbl.setSizeUndefined();
         messageLbl.addStyleName(ValoTheme.LABEL_LIGHT);
-        messageLbl.addStyleName(ValoTheme.LABEL_H4);
+        //messageLbl.addStyleName(ValoTheme.LABEL_H4);
 
         body.addComponent(messageLbl);
-        body.setComponentAlignment(messageLbl, Alignment.BOTTOM_CENTER);
-        /*[ /NAMEFOLDER ]*/
+        body.setComponentAlignment(messageLbl, Alignment.MIDDLE_LEFT);
+        /*[ /BODY TEXT ]*/
 
  /*[ FOOTER ]*/
         HorizontalLayout footer = new HorizontalLayout();
@@ -727,6 +726,8 @@ public final class ScheduleView extends Panel implements View {
             } else {
                 notification.createFailure("No se elimino el archivo");
             }
+            
+            
             window.close();
         });
         create.setClickShortcut(ShortcutAction.KeyCode.ENTER, null);

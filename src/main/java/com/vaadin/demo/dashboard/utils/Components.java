@@ -57,8 +57,6 @@ public class Components {
         return menu;
     }
     
-    
-    
     public List<File> directoryContents(File directory) {
         // ARRAY QUE VA A ACONTENER TODOS LOS ARCHIVOS ORDENADOS POR TIPO Y ALFABETICAMENTE
         List<File> allDocsLst = new ArrayList<>();
