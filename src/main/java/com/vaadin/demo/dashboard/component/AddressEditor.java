@@ -158,7 +158,7 @@ public class AddressEditor extends CssLayout implements LayoutClickListener {
             detailsWrapper.addComponent(buildForm());
 
             content.addComponent(detailsWrapper);
-            content.setExpandRatio(detailsWrapper, 1f);
+            content.setExpandRatio(detailsWrapper, 1.0f);
             content.addComponent(buildFooter());
 
             setContent(content);
