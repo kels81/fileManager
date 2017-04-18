@@ -196,7 +196,7 @@ public class DirectoryTreeWindow extends Window {
             container.getItem(file).getItemProperty("type").setValue(source);
 
             if (event != null) {
-                tree.setParent(file, event.getItemId());
+                container.setParent(file, event.getItemId());
             }
             // SI SE ENCUENTRA VACIA LA CARPETA, NO MOSTRARA LA FLECHA DE EXPANDIR
             if (file.isFile() || (file.isDirectory() && file.list().length == 0)) {
