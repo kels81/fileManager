@@ -3,13 +3,11 @@ package com.vaadin.demo.dashboard.view.schedule;
 import com.vaadin.addon.contextmenu.MenuItem;
 import com.vaadin.addon.contextmenu.ContextMenu;
 import com.vaadin.addon.contextmenu.Menu;
-import com.vaadin.data.Container;
-import com.vaadin.data.util.HierarchicalContainer;
+import com.vaadin.demo.dashboard.component.DirectoryTreeFolderWindow;
 import com.vaadin.demo.dashboard.component.EmailWindow;
 import com.vaadin.demo.dashboard.utils.Components;
 import com.vaadin.demo.dashboard.utils.Notifications;
 import com.vaadin.event.FieldEvents;
-import com.vaadin.event.ItemClickEvent;
 import com.vaadin.event.LayoutEvents.LayoutClickEvent;
 import com.vaadin.event.ShortcutAction;
 import com.vaadin.navigator.View;
@@ -78,10 +76,10 @@ public final class ScheduleView extends Panel implements View {
     public ScheduleView() {
         this.origenPath = new File("C:\\Users\\Edrd\\Documents\\GitHub\\fileManager\\Archivos");
         //this.path = VaadinService.getCurrent().getBaseDirectory() + "/VAADIN/themes/UPLOADS/";
-        
+
         setSizeFull();
         addStyleName("schedule");
-       //addStyleName(ValoTheme.PANEL_BORDERLESS);
+        //addStyleName(ValoTheme.PANEL_BORDERLESS);
 
         tabs = new VerticalLayout();
         //tabs.setSizeFull();
@@ -544,7 +542,6 @@ public final class ScheduleView extends Panel implements View {
         uploader.addStyleName(ValoTheme.BUTTON_SMALL);
         uploader.setUploadPath(uploadPath);
         uploader.setMaxFileSize("5mb");
-        
 
 //show notification after file is uploaded
         uploader.addFileUploadedListener(new Plupload.FileUploadedListener() {
@@ -648,7 +645,11 @@ public final class ScheduleView extends Panel implements View {
         }
 
         MenuItem moverCopiar = menu.addItem("Mover o Copiar", e -> {
-            Notification.show("invisible");
+            //Notification.show("invisible");
+            DirectoryTreeFolderWindow directoryTreeWindow = new DirectoryTreeFolderWindow(file);
+            Window w = directoryTreeWindow;
+            UI.getCurrent().addWindow(w);
+            w.focus();
         });
         moverCopiar.setIcon(FontAwesome.COPY);
 
@@ -689,7 +690,7 @@ public final class ScheduleView extends Panel implements View {
 
         Label messageLbl = new Label("¿Está seguro de que desea eliminar este archivo?");
         messageLbl.setSizeUndefined();
-        messageLbl.addStyleName(ValoTheme.LABEL_LIGHT);
+        //messageLbl.addStyleName(ValoTheme.LABEL_LIGHT);
         //messageLbl.addStyleName(ValoTheme.LABEL_H4);
 
         body.addComponent(messageLbl);
@@ -726,8 +727,7 @@ public final class ScheduleView extends Panel implements View {
             } else {
                 notification.createFailure("No se elimino el archivo");
             }
-            
-            
+
             window.close();
         });
         create.setClickShortcut(ShortcutAction.KeyCode.ENTER, null);
@@ -742,5 +742,5 @@ public final class ScheduleView extends Panel implements View {
 
         return window;
     }
-    
+
 }

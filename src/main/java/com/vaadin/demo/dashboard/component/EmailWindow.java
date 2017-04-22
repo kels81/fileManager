@@ -90,7 +90,7 @@ public class EmailWindow extends Window {
         detailsWrapper.addComponent(fields());
 
         content.addComponent(detailsWrapper);
-        content.setExpandRatio(detailsWrapper, 1f);
+        content.setExpandRatio(detailsWrapper, 1.0f);
         content.addComponent(buildFooter());
 
         setContent(content);
@@ -659,7 +659,7 @@ public class EmailWindow extends Window {
                 container.getItem(file).getItemProperty("type").setValue(source);
 
                 if (event != null) {
-                    tree.setParent(file, event.getItemId());
+                    container.setParent(file, event.getItemId());
                 }
                 // SI SE ENCUENTRA VACIA LA CARPETA, NO MOSTRARA LA FLECHA DE EXPANDIR
                 if (file.isFile() || (file.isDirectory() && file.list().length == 0)) {
