@@ -10,6 +10,7 @@ import com.vaadin.data.Property;
 import com.vaadin.data.util.HierarchicalContainer;
 import com.vaadin.demo.dashboard.utils.Components;
 import com.vaadin.demo.dashboard.utils.Notifications;
+import com.vaadin.demo.dashboard.view.schedule.ScheduleView;
 import com.vaadin.event.ItemClickEvent;
 import com.vaadin.server.Responsive;
 import com.vaadin.server.ThemeResource;
@@ -133,7 +134,7 @@ public class DirectoryTreeFolderWindow extends Window {
         tree.addItemClickListener(new ItemClickEvent.ItemClickListener() {
             @Override
             public void itemClick(ItemClickEvent event) {
-                Notification.show("6666_"+event.getItem().getItemProperty("caption").getValue());
+                Notification.show("6666_" + event.getItem().getItemProperty("caption").getValue());
                 Object itemId = event.getItemId();
                 //VALIDACION PARA EXPANDIR NODE DESDE EL LABEL
                 if (event.isDoubleClick()) {
@@ -148,12 +149,12 @@ public class DirectoryTreeFolderWindow extends Window {
         tree.addValueChangeListener(new Property.ValueChangeListener() {
             @Override
             public void valueChange(Property.ValueChangeEvent event) {
-                Notification.show("789797_"+event.getProperty().getValue().toString());
+                Notification.show("789797_" + event.getProperty().getValue().toString());
             }
         });
 
         root.addComponent(tree);
-        
+
         return root;
     }
 
@@ -177,7 +178,7 @@ public class DirectoryTreeFolderWindow extends Window {
             @Override
             public void buttonClick(Button.ClickEvent event) {
                 Path source = Paths.get(fileTo.getAbsolutePath());
-                Path target = Paths.get(tree.getValue().toString()+"\\"+fileTo.getName());
+                Path target = Paths.get(tree.getValue().toString() + "\\" + fileTo.getName());
 
                 System.out.println("sourceMov = " + source);
                 System.out.println("targetMov = " + target);
@@ -191,11 +192,10 @@ public class DirectoryTreeFolderWindow extends Window {
             @Override
             public void buttonClick(Button.ClickEvent event) {
                 Path source = Paths.get(fileTo.getAbsolutePath());
-                Path target = Paths.get(tree.getValue().toString()+"\\"+fileTo.getName());
+                Path target = Paths.get(tree.getValue().toString() + "\\" + fileTo.getName());
 
                 System.out.println("sourceCop = " + source);
-                System.out.println("targetCop"
-                        + " = " + target);
+                System.out.println("targetCop   = " + target);
                 copyFile(source, target);
                 close();
             }
@@ -253,7 +253,7 @@ public class DirectoryTreeFolderWindow extends Window {
     }
 
     private void moveFile(Path sourceDir, Path targetDir) {
-        
+
         try {
             Files.move(sourceDir, targetDir, StandardCopyOption.REPLACE_EXISTING);
             notification.createSuccess("Se movio el archivo correctamente: " + fileTo.getName());
@@ -265,10 +265,10 @@ public class DirectoryTreeFolderWindow extends Window {
     }
 
     private void copyFile(Path sourceDir, Path targetDir) {
-        
+
         try {
             Files.copy(sourceDir, targetDir);
-            notification.createSuccess("Se copio el archvio correctamente: " + fileTo.getName());
+            notification.createSuccess("Se copio el archivo correctamente: " + fileTo.getName());
         } catch (FileAlreadyExistsException ex) {
             notification.createFailure("Ya existe un archivo con el mismo nombre en esta carpeta");
         } catch (IOException ex) {
