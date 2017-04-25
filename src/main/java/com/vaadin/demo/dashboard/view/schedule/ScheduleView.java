@@ -3,11 +3,14 @@ package com.vaadin.demo.dashboard.view.schedule;
 import com.vaadin.addon.contextmenu.MenuItem;
 import com.vaadin.addon.contextmenu.ContextMenu;
 import com.vaadin.addon.contextmenu.Menu;
-import com.vaadin.demo.dashboard.component.DirectoryTreeFolderWindow;
+import com.vaadin.data.Container;
+import com.vaadin.data.Property;
+import com.vaadin.data.util.HierarchicalContainer;
 import com.vaadin.demo.dashboard.component.EmailWindow;
 import com.vaadin.demo.dashboard.utils.Components;
 import com.vaadin.demo.dashboard.utils.Notifications;
 import com.vaadin.event.FieldEvents;
+import com.vaadin.event.ItemClickEvent;
 import com.vaadin.event.LayoutEvents.LayoutClickEvent;
 import com.vaadin.event.ShortcutAction;
 import com.vaadin.navigator.View;
@@ -42,11 +45,19 @@ import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.Window;
 import com.vaadin.ui.themes.ValoTheme;
 import java.io.File;
+import java.io.FileFilter;
 import java.io.IOException;
+import java.nio.file.FileAlreadyExistsException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.io.filefilter.DirectoryFileFilter;
 import org.apache.commons.lang3.StringUtils;
 import pl.exsio.plupload.Plupload;
 import pl.exsio.plupload.PluploadError;
@@ -460,20 +471,20 @@ public final class ScheduleView extends Panel implements View {
         body.setSpacing(true);
         body.setMargin(true);
 
-        TextField editNameTxt = new TextField();
-        editNameTxt.focus();
-        editNameTxt.setWidth(100.0f, Sizeable.Unit.PERCENTAGE);
-        editNameTxt.setValue(FilenameUtils.getBaseName(file.getName()));    //Para mostrar solamente el nombre del archivo sin la extensión
-        editNameTxt.setInputPrompt("Nuevo nombre del archivo");
-        editNameTxt.setTextChangeEventMode(AbstractTextField.TextChangeEventMode.EAGER);          //EAGER, Para que evento no sea lento
-        editNameTxt.setTextChangeTimeout(200);
-        editNameTxt.setImmediate(true);
-        editNameTxt.addTextChangeListener((FieldEvents.TextChangeEvent event) -> {
+        TextField txtEditName = new TextField();
+        txtEditName.focus();
+        txtEditName.setWidth(100.0f, Sizeable.Unit.PERCENTAGE);
+        txtEditName.setValue(FilenameUtils.getBaseName(file.getName()));    //Para mostrar solamente el nombre del archivo sin la extensión
+        txtEditName.setInputPrompt("Nuevo nombre del archivo");
+        txtEditName.setTextChangeEventMode(AbstractTextField.TextChangeEventMode.EAGER);          //EAGER, Para que evento no sea lento
+        txtEditName.setTextChangeTimeout(200);
+        txtEditName.setImmediate(true);
+        txtEditName.addTextChangeListener((FieldEvents.TextChangeEvent event) -> {
             save.setEnabled(StringUtils.isNotBlank(event.getText()));
         });
 
-        body.addComponent(editNameTxt);
-        body.setComponentAlignment(editNameTxt, Alignment.MIDDLE_CENTER);
+        body.addComponent(txtEditName);
+        body.setComponentAlignment(txtEditName, Alignment.MIDDLE_CENTER);
         /*[ /NAMEFOLDER ]*/
 
  /*[ FOOTER ]*/
@@ -497,7 +508,7 @@ public final class ScheduleView extends Panel implements View {
         save.setEnabled(false);
         save.addClickListener((ClickEvent event) -> {
             // NUEVO NOMBRE
-            String newName = editNameTxt.getValue();
+            String newName = txtEditName.getValue();
             // EXTENSION DEL ARCHIVO
             String extension = file.getName().substring(file.getName().lastIndexOf('.') + 1);
             // PATH DEL ARCHIVO
@@ -646,7 +657,7 @@ public final class ScheduleView extends Panel implements View {
 
         MenuItem moverCopiar = menu.addItem("Mover o Copiar", e -> {
             //Notification.show("invisible");
-            DirectoryTreeFolderWindow directoryTreeWindow = new DirectoryTreeFolderWindow(file);
+            DirectoryTreeFolderWindow2 directoryTreeWindow = new DirectoryTreeFolderWindow2(file);
             Window w = directoryTreeWindow;
             UI.getCurrent().addWindow(w);
             w.focus();
@@ -742,5 +753,251 @@ public final class ScheduleView extends Panel implements View {
 
         return window;
     }
+    
+public class DirectoryTreeFolderWindow2 extends Window {
+
+    private final File origenPath;
+    private final VerticalLayout content;
+    private VerticalLayout body;
+    private VerticalLayout root;
+    private Tree tree;
+    private final TabSheet detailsWrapper;
+    private HierarchicalContainer container;
+    private Label lblFileName;
+    private final File fileTo;
+
+    private final Components comp = new Components();
+    private final Notifications notification = new Notifications();
+
+    public DirectoryTreeFolderWindow2(File file) {
+        this.origenPath = new File("C:\\Users\\Edrd\\Documents\\GitHub\\fileManager\\Archivos");
+        this.fileTo = file;
+
+        Responsive.makeResponsive(this);
+
+        addStyleName("directorywindow");
+        setModal(true);
+        setResizable(false);
+        setClosable(true);
+        center();
+
+        setHeight(90.0f, Unit.PERCENTAGE);
+
+        content = new VerticalLayout();
+        content.setSizeFull();
+        content.setMargin(true);
+
+        detailsWrapper = new TabSheet();
+        detailsWrapper.setSizeFull();
+        detailsWrapper.addStyleName(ValoTheme.TABSHEET_PADDED_TABBAR);
+        detailsWrapper.addComponent(body());
+
+        content.addComponent(detailsWrapper);
+        content.setExpandRatio(detailsWrapper, 1.0f);
+        content.addComponent(buildFooter());
+
+        setContent(content);
+    }
+
+    private VerticalLayout body() {
+        body = new VerticalLayout();
+        body.setCaption("Mover o Copiar");
+        //body.setSizeFull();
+        body.setMargin(true);
+        body.setSpacing(true);
+        body.addComponent(buildFileName());
+        Component tree = buildTree();
+        body.addComponent(tree);
+        body.setExpandRatio(tree, 1.0f);
+
+        //Page.getCurrent().getStyles().add(".v-verticallayout {border: 1px solid blue;} .v-verticallayout .v-slot {border: 1px solid red;}");
+        return body;
+    }
+
+    private Label buildFileName() {
+        return lblFileName = new Label(fileTo.getName());
+    }
+
+    private Component buildTree() {
+        root = new VerticalLayout();
+        //root.setMargin(new MarginInfo(true, false));
+
+        Container generateContainer = getDirectoryContainer(origenPath);
+        tree = new Tree();
+        tree.setContainerDataSource(generateContainer);
+        tree.setItemCaptionPropertyId("caption");
+        tree.setItemIconPropertyId("icon");
+        tree.setImmediate(true);
+        tree.setSelectable(true);
+        tree.addExpandListener(new Tree.ExpandListener() {
+            @Override
+            public void nodeExpand(Tree.ExpandEvent event) {
+                createTreeContent(new File(event.getItemId().toString()), event);
+            }
+        });
+        tree.addCollapseListener(new Tree.CollapseListener() {
+            @Override
+            public void nodeCollapse(Tree.CollapseEvent event) {
+                // Remove all children of the collapsing node
+                Object children[] = tree.getChildren(event.getItemId()).toArray();
+                for (Object childrenItem : children) {
+                    tree.collapseItemsRecursively(childrenItem);
+                }
+            }
+        });
+        tree.addItemClickListener(new ItemClickEvent.ItemClickListener() {
+            @Override
+            public void itemClick(ItemClickEvent event) {
+                Notification.show("6666_" + event.getItem().getItemProperty("caption").getValue());
+                Object itemId = event.getItemId();
+                //VALIDACION PARA EXPANDIR NODE DESDE EL LABEL
+                if (event.isDoubleClick()) {
+                    if (tree.isExpanded(itemId)) {
+                        tree.collapseItem(itemId);
+                    } else {
+                        tree.expandItem(itemId);
+                    }
+                }
+            }
+        });
+        tree.addValueChangeListener(new Property.ValueChangeListener() {
+            @Override
+            public void valueChange(Property.ValueChangeEvent event) {
+                Notification.show("789797_" + event.getProperty().getValue().toString());
+            }
+        });
+
+        root.addComponent(tree);
+
+        return root;
+    }
+
+    private Component buildFooter() {
+        HorizontalLayout footer = new HorizontalLayout();
+        footer.setSpacing(true);
+        footer.addStyleName(ValoTheme.WINDOW_BOTTOM_TOOLBAR);
+        footer.setWidth(100.0f, Unit.PERCENTAGE);
+
+        Button btnCancelar = new Button("Cancelar");
+        btnCancelar.addClickListener(new Button.ClickListener() {
+            @Override
+            public void buttonClick(Button.ClickEvent event) {
+                close();
+            }
+        });
+
+        Button btnMover = new Button("Mover");
+        btnMover.addStyleName(ValoTheme.BUTTON_PRIMARY);
+        btnMover.addClickListener(new Button.ClickListener() {
+            @Override
+            public void buttonClick(Button.ClickEvent event) {
+                Path source = Paths.get(fileTo.getAbsolutePath());
+                Path target = Paths.get(tree.getValue().toString() + "\\" + fileTo.getName());
+
+                System.out.println("sourceMov = " + source);
+                System.out.println("targetMov = " + target);
+                moveFile(source, target);
+                close();
+            }
+        });
+        Button btnCopiar = new Button("Copiar");
+        btnCopiar.addStyleName(ValoTheme.BUTTON_PRIMARY);
+        btnCopiar.addClickListener(new Button.ClickListener() {
+            @Override
+            public void buttonClick(Button.ClickEvent event) {
+                Path source = Paths.get(fileTo.getAbsolutePath());
+                Path target = Paths.get(tree.getValue().toString() + "\\" + fileTo.getName());
+
+                System.out.println("sourceCop = " + source);
+                System.out.println("targetCop   = " + target);
+                copyFile(source, target);
+                close();
+            }
+        });
+
+        footer.addComponents(btnCancelar, btnMover, btnCopiar);
+        footer.setExpandRatio(btnCancelar, 1.0f);
+        footer.setComponentAlignment(btnCancelar, Alignment.TOP_RIGHT);
+        footer.setComponentAlignment(btnMover, Alignment.TOP_RIGHT);
+        footer.setComponentAlignment(btnCopiar, Alignment.TOP_RIGHT);
+        return footer;
+    }
+
+    public HierarchicalContainer getDirectoryContainer(File directory) {
+
+        // Create new container
+        container = new HierarchicalContainer();
+        // Create containerproperty for name
+        container.addContainerProperty("icon", ThemeResource.class, null);
+        container.addContainerProperty("caption", String.class, null);
+        container.addContainerProperty("path", String.class, null);
+        container.addContainerProperty("type", String.class, null);
+
+        createTreeContent(directory, null);
+
+        return container;
+    }
+
+    private void createTreeContent(File directory, Tree.ExpandEvent event) {
+
+        File[] files = directory.listFiles((FileFilter) DirectoryFileFilter.DIRECTORY);     //PARA OBTENER UNICAMENTE DIRECTORIOS DE UN DIRECTORIO
+        Arrays.sort(files);
+
+        for (File file : files) {
+
+            Boolean allow = Boolean.FALSE;
+
+            //PARA SABER SI EL DIRECTORIO TIENE ADENTRO OTROS DIRECTORIOS Y PODER MOSTRAR LA FLECHA DE EXPANDIR
+            if (file.isDirectory() && file.list().length != 0) {
+                File[] subDirectory = file.listFiles((FileFilter) DirectoryFileFilter.DIRECTORY);
+                allow = subDirectory.length != 0;
+            }
+
+            container.addItem(file);
+            container.getItem(file).getItemProperty("caption").setValue(file.getName());
+            container.getItem(file).getItemProperty("icon").setValue(new ThemeResource("img/file_manager/folder_24.png"));
+            container.getItem(file).getItemProperty("path").setValue(file.getAbsolutePath());
+            container.getItem(file).getItemProperty("type").setValue("folder");
+            container.setChildrenAllowed(file, allow);  // SI SE ENCUENTRA VACIA LA CARPETA, NO MOSTRARA LA FLECHA DE EXPANDIR
+
+            if (event != null) {
+                container.setParent(file, event.getItemId());
+            }
+        }
+    }
+
+    private void moveFile(Path sourceDir, Path targetDir) {
+
+        try {
+            Files.move(sourceDir, targetDir, StandardCopyOption.REPLACE_EXISTING);
+            // SE RECARGA LA PAGINA, PARA MOSTRAR EL ARCHIVO CARGADO
+            String dir = sourceDir.getParent().toString();
+            cleanAndBuild(new File(dir));
+            displaySubDirectoryContents(new File(dir));
+            notification.createSuccess("Se movio el archivo correctamente: " + fileTo.getName());
+        } catch (FileAlreadyExistsException ex) {
+            notification.createFailure("Ya existe un archivo con el mismo nombre en esta carpeta");
+        } catch (IOException ex) {
+            notification.createFailure("Problemas al mover el archivo");
+        }
+    }
+
+    private void copyFile(Path sourceDir, Path targetDir) {
+
+        try {
+            Files.copy(sourceDir, targetDir);
+            // SE RECARGA LA PAGINA, PARA MOSTRAR EL ARCHIVO CARGADO
+            String dir = sourceDir.getParent().toString();
+            cleanAndBuild(new File(dir));
+            displaySubDirectoryContents(new File(dir));
+            notification.createSuccess("Se copio el archivo correctamente: " + fileTo.getName());
+        } catch (FileAlreadyExistsException ex) {
+            notification.createFailure("Ya existe un archivo con el mismo nombre en esta carpeta");
+        } catch (IOException ex) {
+            notification.createFailure("Problemas al copiar el archivo");
+        }
+    }
+
+}
 
 }
